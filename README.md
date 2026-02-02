@@ -53,8 +53,8 @@ getPublicMarkets(params: GetMarketsParams): Promise<Market[]>;
 interface GetMarketsParams {
   limit: number;
   offset: number;
-  sortBy?: "totalVolume" | "createdAt" | "liquidity";
-  status?: "Live" | "Resolved" | "Closed";
+  sortBy?: "Liquidity" | "Volumn" | "latest";
+  status?: 'Live' | 'New' | 'WaitingForResult' | 'UnderDispute' | 'UnderAppeal' | 'ClosingSoon' | 'InReview' | 'InEvaluation' | 'Closed' | 'Trading';
 }
 ```
 
@@ -64,7 +64,7 @@ interface GetMarketsParams {
 const markets = await rain.getPublicMarkets({
   limit?: 12,
   offset?: 1,
-  sortBy?: "totalVolume",
+  sortBy?: "Liquidity",
   status?: "Live",
 });
 ```

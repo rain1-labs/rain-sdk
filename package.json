@@ -1,6 +1,6 @@
 {
     "name": "@rainprotocolsdk/sdk",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Rain SDK",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",

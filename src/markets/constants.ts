@@ -10,3 +10,9 @@ export const MARKET_STATUS = {
     InEvaluation: "Appeal_Window_Open",
     Trading: "Pending_Finalization"
 } as const;
+
+export const MARKET_SORT_BY = {
+    Liquidity: "totalLiquidity",
+    Volumn: "totalVolumn",
+    latest: "age"
+}

@@ -1,9 +1,9 @@
 export type MarketStatus = 'Live' | 'New' | 'WaitingForResult' | 'UnderDispute' | 'UnderAppeal' | 'ClosingSoon' | 'InReview' | 'InEvaluation' | 'Closed' | 'Trading';
 
 export type MarketSortBy =
-    | 'totalVolume'
-    | 'createdAt'
-    | 'endTime';
+    | 'Liquidity'
+    | 'Volumn'
+    | 'latest';
 
 export interface GetMarketsParams {
     limit?: number;
