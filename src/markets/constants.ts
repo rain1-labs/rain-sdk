@@ -1,0 +1,12 @@
+export const MARKET_STATUS = {
+    New: "New",
+    Live: "Live",
+    WaitingForResult: 'Waiting_for_Result',
+    UnderDispute: "Under_Dispute",
+    UnderAppeal: "Under_Appeal",
+    Closed: "Closed",
+    ClosingSoon: "Closing_Soon",
+    InReview: "Dispute_Window_Open",
+    InEvaluation: "Appeal_Window_Open",
+    Trading: "Pending_Finalization"
+} as const;

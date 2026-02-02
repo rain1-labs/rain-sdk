@@ -1,0 +1,38 @@
+{
+    "name": "@rainprotocolsdk/sdk",
+    "version": "1.0.1",
+    "description": "Rain SDK",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc -w",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "web3",
+        "account-abstraction",
+        "smart-account",
+        "rain",
+        "viem",
+        "alchemy"
+    ],
+    "author": "Rain Protocol",
+    "license": "MIT",
+    "peerDependencies": {
+        "viem": "^2.0.0"
+    },
+    "dependencies": {
+        "@account-kit/infra": "^4.48.0",
+        "@account-kit/wallet-client": "^0.1.0-alpha.10",
+        "@alchemy/aa-alchemy": "^3.0.0",
+        "@alchemy/aa-core": "^3.0.0",
+        "ethers": "^6.16.0"
+    },
+    "devDependencies": {
+        "typescript": "^5.9.3"
+    }
+}
