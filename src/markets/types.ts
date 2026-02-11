@@ -10,6 +10,7 @@ export interface GetMarketsParams {
     offset?: number;
     sortBy?: MarketSortBy;
     status?: MarketStatus;
+    apiUrl?: string;
 }
 
 export interface Market {

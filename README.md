@@ -102,6 +102,94 @@ const approvalTx = rain.buildApprovalTx({
 
 ---
 
+## buildCreateMarketTx
+
+Builds a **raw EVM transaction** for creating a market in rain protocol.
+
+This function **does not send the transaction** — it only prepares calldata.
+
+### Method Signature
+
+```ts
+buildCreateMarketTx(params: CreateMarketTxParams): RawTransaction;
+```
+
+### Parameters
+
+```ts
+interface CreateMarketTxParams {
+  isPublic: boolean;
+  isPublicPoolResolverAi: boolean;
+  creator: `0x${string}`;
+  startTime: number | bigint;        // Unix timestamp (seconds)
+  endTime: number | bigint;          // Must be > startTime
+  options: number;                   // Number of options (> 0)
+  ipfsUrl: string;                   // IPFS CID
+  inputAmountWei: bigint;            // Initial liquidity (token wei)
+  barValues: (number)[];             // Token Distribution values in options in %
+  baseToken: `0x${string}`;          // ERC20 token address
+  tokenDecimals?: number;            // Optional (default: 6)
+}
+```
+
+### Validations
+
+| Field                    | Type               | Required | Description                      |
+| ------------------------ | ------------------ | -------- | -------------------------------- |
+| `isPublic`               | `boolean`          | ✅        | Whether market is public         |
+| `isPublicPoolResolverAi` | `boolean`          | ✅        | AI resolver flag                 |
+| `creator`                | `0x${string}`      | ✅        | Market creator address           |
+| `startTime`              | `number \| bigint` | ✅        | Market start timestamp           |
+| `endTime`                | `number \| bigint` | ✅        | Must be greater than `startTime` |
+| `options`                | `number`           | ✅        | Number of market options (> 2)   |
+| `ipfsUrl`                | `string`           | ✅        | IPFS CID containing metadata     |
+| `inputAmountWei`         | `bigint`           | ✅        | Initial liquidity amount         |
+| `barValues`              | `array`            | ✅        | Cannot be empty                  |
+| `baseToken`              | `0x${string}`      | ✅        | ERC20 base token address         |
+| `tokenDecimals`          | `number`           | ❌        | Defaults to `6`                  |
+
+### Minimum Liquidity Rule
+
+#### inputAmountWei >= 10 tokens
+
+### Return Type
+
+```ts
+interface RawTransaction {
+  to: `0x${string}`;
+  data: `0x${string}`;
+}
+```
+
+### Example
+
+```ts
+rain.buildCreateMarketTx({
+    isPublic: true,
+    isPublicPoolResolverAi: false,
+    creator: "0x996ea23940f4a01610181D04bdB6F862719b63f0",
+    startTime: 1770836400,
+    endTime: 1770922800,
+    options: 3,
+    ipfsUrl: "QmUdu2eLEQ2qFtNeVVLfVQDBCoc4DT5752enxDitLGmVec",
+    inputAmountWei: 100000000n,
+    barValues: [48, 40, 1],
+    baseToken: "0xCa4f77A38d8552Dd1D5E44e890173921B67725F4"
+  })
+```
+
+### Recommended Execution Pattern
+
+```ts
+// 1. Build raw transaction
+const rawTx = rain.buildCreateMarketTx({...});
+
+// 2. Execute using your provider
+await yourProvider.sendTransaction(rawTx);
+```
+
+---
+
 ## buildBuyOptionRawTx
 
 Builds a **raw EVM transaction** for entering a market option.

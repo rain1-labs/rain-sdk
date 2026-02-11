@@ -8,3 +8,9 @@ export interface RainConfig {
   chain: Chain;
   rpcUrl?: string;
 }
+
+export type RainEnvironment = "development" | "stage" | "production";
+export interface RainCoreConfig {
+  environment?: RainEnvironment;
+}
+

@@ -23,3 +23,19 @@ export interface EnterLimitOptionTxParams {
     buyAmountInWei: bigint;                 // total buy amount
     tokenDecimals?: number;
 }
+
+export interface CreateMarketTxParams {
+    isPublic: boolean;
+    isPublicPoolResolverAi: boolean;
+    creator: `0x${string}`; // smartAccount
+    startTime: bigint; // unix timestamp (seconds)
+    endTime: bigint;   // unix timestamp (seconds)
+    options: bigint; // market options
+    disputeTimer: number;
+    ipfsUrl: string;
+    inputAmountWei: bigint;
+    barValues: number[]; // transformedBarValues
+    baseToken: `0x${string}`; // TOKEN contract address
+    tokenDecimals?: number;
+    factoryContractAddress?: `0x${string}`;
+}
