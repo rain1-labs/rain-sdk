@@ -39,3 +39,17 @@ export interface CreateMarketTxParams {
     tokenDecimals?: number;
     factoryContractAddress?: `0x${string}`;
 }
+
+export interface ClaimTxParams {
+    marketId: string;
+    walletAddress: `0x${string}`;
+    apiUrl?: string;
+    rpcUrl?: string;
+}
+
+export interface GetUserOptionSharesParams {
+    options: [{ choiceIndex: number, optionName: string }];
+    walletAddress: `0x${string}`;
+    marketContractAddress: `0x${string}`;
+    rpcUrl: string;
+}

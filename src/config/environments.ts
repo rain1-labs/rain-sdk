@@ -1,4 +1,14 @@
 export const ALLOWED_ENVIRONMENTS = ["development", "stage", "production"] as const;
+export const DEFAULT_RPCS: string[] = [
+    "https://arbitrum.meowrpc.com",
+    "https://rpc.sentio.xyz/arbitrum-one",
+    "https://rpc.owlracle.info/arb/70d38ce1826c4a60bb2a8e05a6c8b20f"
+]
+
+export function getRandomRpc(): string {
+    const index = Math.floor(Math.random() * DEFAULT_RPCS.length);
+    return DEFAULT_RPCS[index];
+}
 
 export const ENV_CONFIG = {
     development: {

@@ -287,6 +287,54 @@ rain.buildLimitBuyOptionTx({
 
 ---
 
+## buildClaimTx
+
+Builds a **raw EVM transaction** to claim the funds from a Rain market.
+
+This function **does not send the transaction** — it only prepares calldata.
+
+### Method Signature
+
+```ts
+buildClaimTx(params: ClaimTxParams): Promise<RawTransaction>
+```
+
+### Parameters
+
+```ts
+interface ClaimTxParams {
+  marketId: string;
+  walletAddress: `0x${string}`;
+}
+```
+
+### Validations
+
+| Parameter       | Type          | Required | Description                        |
+| --------------- | ------------- | -------- | ---------------------------------- |
+| `marketId`      | `string`      | ✅        | Unique identifier of the market    |
+| `walletAddress` | `0x${string}` | ✅        | Address of the user claiming funds |
+
+### Return Type
+
+```ts
+interface RawTransaction {
+  to: `0x${string}`;
+  data: `0x${string}`;
+}
+```
+
+### Example
+
+```ts
+rain.buildClaimTx({
+  marketId: "698c8f116e985bbfacc7fc01",
+  walletAddress: '0x996ea23940f4a01610181D04bdB6F862719b63f0'
+})
+```
+
+---
+
 ## RainAA Class (Account Abstraction)
 
 `RainAA` is responsible for:

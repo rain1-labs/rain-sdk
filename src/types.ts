@@ -12,5 +12,6 @@ export interface RainConfig {
 export type RainEnvironment = "development" | "stage" | "production";
 export interface RainCoreConfig {
   environment?: RainEnvironment;
+  rpcUrl?: string;
 }
 

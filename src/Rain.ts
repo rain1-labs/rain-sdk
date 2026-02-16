@@ -1,11 +1,12 @@
 import { GetMarketsParams, Market } from './markets/types.js';
 import { getMarkets } from './markets/getMarkets.js';
-import { ApproveTxParams, CreateMarketTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction } from './tx/types.js';
+import { ApproveTxParams, ClaimTxParams, CreateMarketTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction } from './tx/types.js';
 import { buildEnterOptionRawTx, buildLimitBuyOrderRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
 import { buildCreateMarketRawTx } from './tx/CreateMarket/buildCreateMarketRawTx.js';
 import { RainCoreConfig, RainEnvironment } from './types.js';
-import { ALLOWED_ENVIRONMENTS, ENV_CONFIG } from './config/environments.js';
+import { ALLOWED_ENVIRONMENTS, ENV_CONFIG, getRandomRpc } from './config/environments.js';
+import { buildClaimRawTx } from './tx/ClaimFunds/buildClaimFundsRawTx.js';
 
 export class Rain {
 
@@ -13,9 +14,10 @@ export class Rain {
   private readonly marketFactory: `0x${string}`;
   private readonly apiUrl: string;
   private readonly distute_initial_timer: number;
+  private readonly rpcUrl?: string;
 
   constructor(config: RainCoreConfig = {}) {
-    const { environment = "development" } = config;
+    const { environment = "development", rpcUrl } = config;
 
     function isValidEnvironment(env: string): env is RainEnvironment {
       return ALLOWED_ENVIRONMENTS.includes(env as RainEnvironment);
@@ -27,6 +29,7 @@ export class Rain {
       );
     }
     this.environment = environment;
+    this.rpcUrl = rpcUrl ?? getRandomRpc();
     const envConfig = ENV_CONFIG[this.environment];
     this.marketFactory = envConfig.market_factory_address
     this.apiUrl = envConfig.apiUrl;
@@ -53,6 +56,10 @@ export class Rain {
 
   buildCreateMarketTx(params: CreateMarketTxParams): RawTransaction {
     return buildCreateMarketRawTx({ ...params, factoryContractAddress: this.marketFactory, disputeTimer: this.distute_initial_timer });
+  }
+
+  async buildClaimTx(params: ClaimTxParams): Promise<RawTransaction> {
+    return buildClaimRawTx({ ...params, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl });
   }
 
 }
