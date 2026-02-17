@@ -38,7 +38,8 @@
         "@account-kit/wallet-client": "^0.1.0-alpha.10",
         "@alchemy/aa-alchemy": "^3.0.0",
         "@alchemy/aa-core": "^3.0.0",
-        "ethers": "^6.16.0"
+        "ethers": "^6.16.0",
+        "ipfs-http-client": "^60.0.1"
     },
     "devDependencies": {
         "typescript": "^5.9.3"

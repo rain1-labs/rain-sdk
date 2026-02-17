@@ -54,8 +54,8 @@ export class Rain {
     return buildLimitBuyOrderRawTx(params);
   }
 
-  buildCreateMarketTx(params: CreateMarketTxParams): RawTransaction {
-    return buildCreateMarketRawTx({ ...params, factoryContractAddress: this.marketFactory, disputeTimer: this.distute_initial_timer });
+  buildCreateMarketTx(params: CreateMarketTxParams): Promise<RawTransaction[]> {
+    return buildCreateMarketRawTx({ ...params, factoryContractAddress: this.marketFactory, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl, disputeTimer: this.distute_initial_timer });
   }
 
   async buildClaimTx(params: ClaimTxParams): Promise<RawTransaction> {

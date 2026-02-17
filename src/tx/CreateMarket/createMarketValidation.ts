@@ -2,13 +2,16 @@ import { CreateMarketTxParams } from "../types.js";
 
 export function validateCreateMarketParams(params: CreateMarketTxParams) {
     const {
+        question,
+        options,
+        tags,
+        description,
         isPublic,
         isPublicPoolResolverAi,
         creator,
         startTime,
         endTime,
-        options,
-        ipfsUrl,
+        no_of_options,
         inputAmountWei,
         barValues,
         baseToken,
@@ -21,11 +24,24 @@ export function validateCreateMarketParams(params: CreateMarketTxParams) {
     if (typeof isPublicPoolResolverAi !== "boolean")
         throw new Error("isPublicPoolResolverAi is required and must be a boolean");
     if (!creator) throw new Error("creator address is required");
+    if (!question) throw new Error("question is required");
+    if (!description) throw new Error("description is required");
+    if (!Array.isArray(options) || options.length < 2 || options.length > 26) {
+        throw new Error("options must be between 2 and 26");
+    }
+    if (options.some(opt => !opt?.toString().trim())) {
+        throw new Error("options cannot contain empty values");
+    }
+    if (!Array.isArray(tags) || tags.length < 1 || tags.length > 3) {
+        throw new Error("tags must be between 1 and 3");
+    }
+    if (tags.some(tag => !tag?.toString().trim())) {
+        throw new Error("tags cannot contain empty values");
+    }
     if (!startTime) throw new Error("startTime is required");
     if (!endTime) throw new Error("endTime is required");
-    if (!options)
+    if (!no_of_options)
         throw new Error("number of options is required and cannot be empty");
-    if (!ipfsUrl || typeof ipfsUrl !== "string") throw new Error("ipfsUrl is required");
     if (!inputAmountWei) throw new Error("inputAmountWei is required");
     if (!barValues || !Array.isArray(barValues) || barValues.length === 0)
         throw new Error("barValues array is required and cannot be empty");
