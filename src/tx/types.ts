@@ -25,10 +25,10 @@ export interface EnterLimitOptionTxParams {
 }
 
 export interface CreateMarketTxParams {
-    question: string;
-    options: string[];
-    tags: string[];
-    description: string;
+    marketQuestion: string;
+    marketOptions: string[];
+    marketTags: string[];
+    marketDescription: string;
     isPublic: boolean;
     isPublicPoolResolverAi: boolean;
     creator: `0x${string}`; // smartAccount

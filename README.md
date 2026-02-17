@@ -118,6 +118,10 @@ buildCreateMarketTx(params: CreateMarketTxParams): RawTransaction;
 
 ```ts
 interface CreateMarketTxParams {
+  marketQuestion: string;
+  marketOptions: string[];
+  marketTags: string[];
+  marketDescription: string;
   isPublic: boolean;
   isPublicPoolResolverAi: boolean;
   creator: `0x${string}`;
@@ -136,6 +140,10 @@ interface CreateMarketTxParams {
 
 | Field                    | Type               | Required | Description                      |
 | ------------------------ | ------------------ | -------- | -------------------------------- |
+| `marketQuestion`         | `string`          | ✅        | Market question (cannot be empty)|
+| `marketOptions`          | `string[]`        | ✅        | List of market options (2 <= 26 ) |
+| `marketTags`             | `string[]`        | ✅        | Tags related to the market (1 <= 3  ) |
+| `marketDescription`      | `string`          | ✅        | Detailed market description        |
 | `isPublic`               | `boolean`          | ✅        | Whether market is public         |
 | `isPublicPoolResolverAi` | `boolean`          | ✅        | AI resolver flag                 |
 | `creator`                | `0x${string}`      | ✅        | Market creator address           |
@@ -165,6 +173,10 @@ interface RawTransaction {
 
 ```ts
 rain.buildCreateMarketTx({
+    marketQuestion: "Will BTC hit 100k?",
+    marketOptions: ["Yes", "No"],
+    marketTags: ["crypto", "bitcoin"],
+    marketDescription: "Prediction market for BTC price",
     isPublic: true,
     isPublicPoolResolverAi: false,
     creator: "0x996ea23940f4a01610181D04bdB6F862719b63f0",
@@ -182,10 +194,10 @@ rain.buildCreateMarketTx({
 
 ```ts
 // 1. Build raw transaction
-const rawTx = rain.buildCreateMarketTx({...});
+const rawTx = rain.buildCreateMarketTx[{...}];
 
 // 2. Execute using your provider
-await yourProvider.sendTransaction(rawTx);
+await yourProvider.sendTransaction(rawTx[index]);
 ```
 
 ---

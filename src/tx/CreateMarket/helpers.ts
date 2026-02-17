@@ -20,10 +20,10 @@ export async function uploadMetaData(
     params: CreateMarketTxParams
 ): Promise<string> {
     const {
-        question,
-        description,
-        options,
-        tags,
+        marketQuestion,
+        marketOptions,
+        marketTags,
+        marketDescription,
         isPublic,
         isPublicPoolResolverAi,
         startTime,
@@ -37,13 +37,13 @@ export async function uploadMetaData(
     const formattedEndDate = new Date(Number(endTime) * 1000).toISOString();
 
     const metadata = {
-        question,
-        options: Array.isArray(options) ? options : [],
-        tags,
-        isPrivate: isPublic,
+        question: marketQuestion,
+        options: Array.isArray(marketOptions) ? marketOptions : [],
+        tags: marketTags,
+        isPrivate: !isPublic,
         startDate: formattedStartDate,
         endDate: formattedEndDate,
-        poolDescription: description,
+        poolDescription: marketDescription,
         isAiResolver: isPublicPoolResolverAi,
         contractData: {
             pool_owner: creator,

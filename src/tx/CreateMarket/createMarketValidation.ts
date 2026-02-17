@@ -2,10 +2,10 @@ import { CreateMarketTxParams } from "../types.js";
 
 export function validateCreateMarketParams(params: CreateMarketTxParams) {
     const {
-        question,
-        options,
-        tags,
-        description,
+        marketQuestion,
+        marketOptions,
+        marketTags,
+        marketDescription,
         isPublic,
         isPublicPoolResolverAi,
         creator,
@@ -24,18 +24,18 @@ export function validateCreateMarketParams(params: CreateMarketTxParams) {
     if (typeof isPublicPoolResolverAi !== "boolean")
         throw new Error("isPublicPoolResolverAi is required and must be a boolean");
     if (!creator) throw new Error("creator address is required");
-    if (!question) throw new Error("question is required");
-    if (!description) throw new Error("description is required");
-    if (!Array.isArray(options) || options.length < 2 || options.length > 26) {
+    if (!marketQuestion) throw new Error("question is required");
+    if (!marketDescription) throw new Error("description is required");
+    if (!Array.isArray(marketOptions) || marketOptions.length < 2 || marketOptions.length > 26) {
         throw new Error("options must be between 2 and 26");
     }
-    if (options.some(opt => !opt?.toString().trim())) {
+    if (marketOptions.some(opt => !opt?.toString().trim())) {
         throw new Error("options cannot contain empty values");
     }
-    if (!Array.isArray(tags) || tags.length < 1 || tags.length > 3) {
+    if (!Array.isArray(marketTags) || marketTags.length < 1 || marketTags.length > 3) {
         throw new Error("tags must be between 1 and 3");
     }
-    if (tags.some(tag => !tag?.toString().trim())) {
+    if (marketTags.some(tag => !tag?.toString().trim())) {
         throw new Error("tags cannot contain empty values");
     }
     if (!startTime) throw new Error("startTime is required");

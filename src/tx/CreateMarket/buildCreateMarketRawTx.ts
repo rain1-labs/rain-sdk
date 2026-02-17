@@ -27,10 +27,10 @@ export async function buildCreateMarketRawTx(
     } = params;
     if (!factoryContractAddress) throw new Error("environment is not set correctly, factory contract address is missing");
     const allowance = await getUserAllownace(params);
-    const txs: RawTransaction[] = [];
+    const createMarketTransactions: RawTransaction[] = [];
     if (BigInt(allowance) < BigInt(inputAmountWei)) {
         const approveTx = buildApproveRawTx({ spender: factoryContractAddress, tokenAddress: baseToken })
-        txs.push(approveTx);
+        createMarketTransactions.push(approveTx);
     }
     validateCreateMarketParams(params);
     const normalizeBarValue = normalizeBarValues(barValues);
@@ -52,7 +52,7 @@ export async function buildCreateMarketRawTx(
         baseToken,
     ] as any;
 
-    txs.push({
+    createMarketTransactions.push({
         to: factoryContractAddress,
         data: encodeFunctionData({
             abi: CreateMarketAbi,
@@ -62,5 +62,5 @@ export async function buildCreateMarketRawTx(
         value: 0n,
     });
 
-    return txs;
+    return createMarketTransactions;
 }
