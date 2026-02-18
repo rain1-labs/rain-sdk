@@ -17,7 +17,7 @@ export async function getUserAllownace(
     const isRpcWorking = await isRpcValid(rpcUrl)
     if (!rpcUrl || !isRpcWorking) { throw new Error("Provided RPC URL is not valid or not working") }
     const provider = new JsonRpcProvider(rpcUrl);
-    const contract = new Contract(baseToken, ERC20Abi, provider);
-    const userAllowance = await contract.allowance(creator, factoryContractAddress)
+    const ERC20ApprovalContract = new Contract(baseToken, ERC20Abi, provider);
+    const userAllowance = await ERC20ApprovalContract.allowance(creator, factoryContractAddress)
     return userAllowance
 }

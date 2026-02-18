@@ -190,6 +190,9 @@ rain.buildCreateMarketTx({
   })
 ```
 
+### Note: 
+If the user has not approved the **Rain Factory contract**, the function will return two transactions **(approve + create market)**, but if approval already exists, it will return only one transaction **(create market)**.
+
 ### Recommended Execution Pattern
 
 ```ts
