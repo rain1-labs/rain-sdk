@@ -8,7 +8,7 @@ const DEFAULT_APPROVE_AMOUNT = ethers.MaxUint256;
 
 export function buildApproveRawTx(
     params: ApproveTxParams
-): RawTransaction | Error {
+): RawTransaction {
     const {
         tokenAddress,
         spender,

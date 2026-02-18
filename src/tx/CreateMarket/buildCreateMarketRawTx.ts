@@ -3,22 +3,23 @@ import { CreateMarketTxParams, RawTransaction } from "../types.js";
 import { CreateMarketAbi } from "../../abi/CreateMarketAbi.js";
 import { CREATE_MARKET } from "../../constants/contractmethods.js";
 import { validateCreateMarketParams } from "./createMarketValidation.js";
-import { normalizeBarValues } from "./helpers.js";
+import { normalizeBarValues, uploadMetaData } from "./helpers.js";
+import { getUserAllownace } from "../../utils/helpers.js";
+import { buildApproveRawTx } from "../buildApprovalRawTx.js";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-export function buildCreateMarketRawTx(
+export async function buildCreateMarketRawTx(
     params: CreateMarketTxParams
-): RawTransaction {
+): Promise<RawTransaction[]> {
     const {
         isPublic,
         isPublicPoolResolverAi,
         creator,
         startTime,
         endTime,
-        options,
+        no_of_options,
         disputeTimer,
-        ipfsUrl,
         inputAmountWei,
         barValues,
         baseToken,
@@ -26,7 +27,14 @@ export function buildCreateMarketRawTx(
     } = params;
     if (!factoryContractAddress) throw new Error("environment is not set correctly, factory contract address is missing");
     validateCreateMarketParams(params);
+    const allowance = await getUserAllownace(params);
+    const createMarketTransactions: RawTransaction[] = [];
+    if (BigInt(allowance) < BigInt(inputAmountWei)) {
+        const approveTx = buildApproveRawTx({ spender: factoryContractAddress, tokenAddress: baseToken })
+        createMarketTransactions.push(approveTx);
+    }
     const normalizeBarValue = normalizeBarValues(barValues);
+    const ipfsUrl = await uploadMetaData(params);
 
     const createMarketParams = [
         isPublic,
@@ -35,7 +43,7 @@ export function buildCreateMarketRawTx(
         ZERO_ADDRESS,
         startTime,
         endTime,
-        options,
+        no_of_options,
         disputeTimer,
         ipfsUrl,
         inputAmountWei,
@@ -44,12 +52,15 @@ export function buildCreateMarketRawTx(
         baseToken,
     ] as any;
 
-    return {
+    createMarketTransactions.push({
         to: factoryContractAddress,
         data: encodeFunctionData({
             abi: CreateMarketAbi,
             functionName: CREATE_MARKET,
             args: [createMarketParams],
         }),
-    };
+        value: 0n,
+    });
+
+    return createMarketTransactions;
 }

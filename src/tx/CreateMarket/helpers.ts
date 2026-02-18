@@ -1,3 +1,5 @@
+import { CreateMarketTxParams } from "../types.js";
+
 export function normalizeBarValues(values: (number)[]): number[] {
     const transformedBarValues = [
         ...values.map((value) => Math.floor(value * 100)),
@@ -12,4 +14,54 @@ export function normalizeBarValues(values: (number)[]): number[] {
     }
 
     return transformedBarValues
+}
+
+export async function uploadMetaData(
+    params: CreateMarketTxParams
+): Promise<string> {
+    const {
+        marketQuestion,
+        marketOptions,
+        marketTags,
+        marketDescription,
+        isPublic,
+        isPublicPoolResolverAi,
+        startTime,
+        endTime,
+        no_of_options,
+        creator,
+        apiUrl,
+    } = params;
+
+    const formattedStartDate = new Date(Number(startTime) * 1000).toISOString();
+    const formattedEndDate = new Date(Number(endTime) * 1000).toISOString();
+
+    const metadata = {
+        question: marketQuestion,
+        options: Array.isArray(marketOptions) ? marketOptions : [],
+        tags: marketTags,
+        isPrivate: !isPublic,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        poolDescription: marketDescription,
+        isAiResolver: isPublicPoolResolverAi,
+        contractData: {
+            pool_owner: creator,
+            start_time: startTime,
+            end_time: endTime,
+            no_of_options: no_of_options,
+        },
+    };
+    const res = await fetch(`${apiUrl}/ipfs/upload`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(metadata),
+    });
+    if (!res.ok) {
+        throw new Error(`Failed to upload metadata: ${res.status}`);
+    }
+    const data = await res.json();
+    return data?.data?.ipfsHash;
 }

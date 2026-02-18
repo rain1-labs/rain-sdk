@@ -25,19 +25,24 @@ export interface EnterLimitOptionTxParams {
 }
 
 export interface CreateMarketTxParams {
+    marketQuestion: string;
+    marketOptions: string[];
+    marketTags: string[];
+    marketDescription: string;
     isPublic: boolean;
     isPublicPoolResolverAi: boolean;
     creator: `0x${string}`; // smartAccount
     startTime: bigint; // unix timestamp (seconds)
     endTime: bigint;   // unix timestamp (seconds)
-    options: bigint; // market options
+    no_of_options: bigint; // market options
     disputeTimer: number;
-    ipfsUrl: string;
     inputAmountWei: bigint;
     barValues: number[]; // transformedBarValues
     baseToken: `0x${string}`; // TOKEN contract address
     tokenDecimals?: number;
     factoryContractAddress?: `0x${string}`;
+    apiUrl?: string;
+    rpcUrl?: string;
 }
 
 export interface ClaimTxParams {

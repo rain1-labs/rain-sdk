@@ -118,12 +118,16 @@ buildCreateMarketTx(params: CreateMarketTxParams): RawTransaction;
 
 ```ts
 interface CreateMarketTxParams {
+  marketQuestion: string;
+  marketOptions: string[];
+  marketTags: string[];
+  marketDescription: string;
   isPublic: boolean;
   isPublicPoolResolverAi: boolean;
   creator: `0x${string}`;
   startTime: number | bigint;        // Unix timestamp (seconds)
   endTime: number | bigint;          // Must be > startTime
-  options: number;                   // Number of options (> 0)
+  no_of_options: number;                   // Number of options (> 0)
   ipfsUrl: string;                   // IPFS CID
   inputAmountWei: bigint;            // Initial liquidity (token wei)
   barValues: (number)[];             // Token Distribution values in options in %
@@ -136,12 +140,16 @@ interface CreateMarketTxParams {
 
 | Field                    | Type               | Required | Description                      |
 | ------------------------ | ------------------ | -------- | -------------------------------- |
+| `marketQuestion`         | `string`          | ✅        | Market question (cannot be empty)|
+| `marketOptions`          | `string[]`        | ✅        | List of market options (2 <= 26 ) |
+| `marketTags`             | `string[]`        | ✅        | Tags related to the market (1 <= 3  ) |
+| `marketDescription`      | `string`          | ✅        | Detailed market description        |
 | `isPublic`               | `boolean`          | ✅        | Whether market is public         |
 | `isPublicPoolResolverAi` | `boolean`          | ✅        | AI resolver flag                 |
 | `creator`                | `0x${string}`      | ✅        | Market creator address           |
 | `startTime`              | `number \| bigint` | ✅        | Market start timestamp           |
 | `endTime`                | `number \| bigint` | ✅        | Must be greater than `startTime` |
-| `options`                | `number`           | ✅        | Number of market options (> 2)   |
+| `no_of_options`          | `number`           | ✅        | Number of market options (> 2)   |
 | `ipfsUrl`                | `string`           | ✅        | IPFS CID containing metadata     |
 | `inputAmountWei`         | `bigint`           | ✅        | Initial liquidity amount         |
 | `barValues`              | `array`            | ✅        | Cannot be empty                  |
@@ -165,6 +173,10 @@ interface RawTransaction {
 
 ```ts
 rain.buildCreateMarketTx({
+    marketQuestion: "Will BTC hit 100k?",
+    marketOptions: ["Yes", "No"],
+    marketTags: ["crypto", "bitcoin"],
+    marketDescription: "Prediction market for BTC price",
     isPublic: true,
     isPublicPoolResolverAi: false,
     creator: "0x996ea23940f4a01610181D04bdB6F862719b63f0",
@@ -178,14 +190,17 @@ rain.buildCreateMarketTx({
   })
 ```
 
+### Note: 
+If the user has not approved the **Rain Factory contract**, the function will return two transactions **(approve + create market)**, but if approval already exists, it will return only one transaction **(create market)**.
+
 ### Recommended Execution Pattern
 
 ```ts
 // 1. Build raw transaction
-const rawTx = rain.buildCreateMarketTx({...});
+const rawTx = rain.buildCreateMarketTx[{...}];
 
 // 2. Execute using your provider
-await yourProvider.sendTransaction(rawTx);
+await yourProvider.sendTransaction(rawTx[index]);
 ```
 
 ---
