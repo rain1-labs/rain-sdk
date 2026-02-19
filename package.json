@@ -18,6 +18,9 @@
     "scripts": {
         "build": "tsc",
         "dev": "tsc -w",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage",
         "prepublishOnly": "npm run build"
     },
     "keywords": [
@@ -41,6 +44,7 @@
         "ethers": "^6.16.0"
     },
     "devDependencies": {
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.18"
     }
 }

@@ -1,0 +1,101 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Mock async dependencies so Rain constructor and sync methods work without network
+vi.mock('../src/markets/getMarkets.js', () => ({
+  getMarkets: vi.fn().mockResolvedValue([]),
+}));
+
+import { Rain } from '../src/Rain.js';
+import { ENV_CONFIG, ALLOWED_ENVIRONMENTS } from '../src/config/environments.js';
+import { getMarkets } from '../src/markets/getMarkets.js';
+
+describe('Rain constructor', () => {
+  it('defaults to development environment', () => {
+    const rain = new Rain();
+    expect(rain.environment).toBe('development');
+  });
+
+  it('accepts each allowed environment', () => {
+    for (const env of ALLOWED_ENVIRONMENTS) {
+      const rain = new Rain({ environment: env });
+      expect(rain.environment).toBe(env);
+    }
+  });
+
+  it('throws for an invalid environment', () => {
+    expect(() => new Rain({ environment: 'invalid' as any })).toThrow(
+      'Invalid environment "invalid"'
+    );
+  });
+
+  it('throws with list of allowed values', () => {
+    expect(() => new Rain({ environment: 'bad' as any })).toThrow(
+      'development, stage, production'
+    );
+  });
+});
+
+describe('Rain.buildApprovalTx', () => {
+  it('delegates to buildApproveRawTx and returns a RawTransaction', () => {
+    const rain = new Rain();
+    const tx = rain.buildApprovalTx({
+      tokenAddress: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+      spender: '0x148DA7F2039B2B00633AC2ab566f59C8a4C86313',
+    });
+    expect(tx).toHaveProperty('to');
+    expect(tx).toHaveProperty('data');
+  });
+});
+
+describe('Rain.buildBuyOptionRawTx', () => {
+  it('delegates to buildEnterOptionRawTx', () => {
+    const rain = new Rain();
+    const tx = rain.buildBuyOptionRawTx({
+      marketContractAddress: '0x1111111111111111111111111111111111111111',
+      selectedOption: 0n,
+      buyAmountInWei: 5_000_000n,
+    });
+    expect(tx.to).toBe('0x1111111111111111111111111111111111111111');
+    expect(tx.data).toMatch(/^0x/);
+  });
+});
+
+describe('Rain.buildLimitBuyOptionTx', () => {
+  it('delegates to buildLimitBuyOrderRawTx', () => {
+    const rain = new Rain();
+    const tx = rain.buildLimitBuyOptionTx({
+      marketContractAddress: '0x1111111111111111111111111111111111111111',
+      selectedOption: 1,
+      pricePerShare: 0.5 as any,
+      buyAmountInWei: 2_000_000n,
+    });
+    expect(tx.to).toBe('0x1111111111111111111111111111111111111111');
+  });
+});
+
+describe('Rain.getPublicMarkets', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls getMarkets with apiUrl from environment config', async () => {
+    const rain = new Rain({ environment: 'development' });
+    await rain.getPublicMarkets({ limit: 5 });
+
+    expect(getMarkets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        limit: 5,
+        apiUrl: ENV_CONFIG.development.apiUrl,
+      })
+    );
+  });
+
+  it('returns the result from getMarkets', async () => {
+    const mockMarkets = [{ id: '1', title: 'Test', totalVolume: '100', status: 'Live' as const }];
+    vi.mocked(getMarkets).mockResolvedValue(mockMarkets);
+
+    const rain = new Rain();
+    const result = await rain.getPublicMarkets({});
+    expect(result).toEqual(mockMarkets);
+  });
+});
