@@ -6,6 +6,43 @@ export const ADDR_TOKEN = '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9' as const;
 export const ADDR_FACTORY = '0x148DA7F2039B2B00633AC2ab566f59C8a4C86313' as const;
 export const ADDR_MARKET = '0x1111111111111111111111111111111111111111' as const;
 export const ADDR_ZERO = '0x0000000000000000000000000000000000000000' as const;
+export const RPC_URL = 'https://arb1.arbitrum.io/rpc' as const;
+
+export const ERC20_BALANCE_OF_ABI = [
+  {
+    inputs: [{ name: 'account', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
+export const ERC20_DECIMALS_ABI = [
+  {
+    inputs: [],
+    name: 'decimals',
+    outputs: [{ name: '', type: 'uint8' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
+export function makeMulticallContracts() {
+  return [
+    {
+      address: ADDR_TOKEN,
+      abi: ERC20_BALANCE_OF_ABI,
+      functionName: 'balanceOf',
+      args: [ADDR_ALICE],
+    },
+    {
+      address: ADDR_TOKEN,
+      abi: ERC20_DECIMALS_ABI,
+      functionName: 'decimals',
+    },
+  ] as const;
+}
 
 export function makeCreateMarketParams(
   overrides: Partial<CreateMarketTxParams> = {}
