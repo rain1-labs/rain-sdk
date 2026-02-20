@@ -26,6 +26,22 @@ async function main() {
 
   log('MarketDetails', details);
 
+  // 3. Fetch prices for the same market
+  log(`Fetching prices for market: ${firstMarket.id}`);
+  const prices = await rain.getMarketPrices(firstMarket.id);
+
+  assert(Array.isArray(prices), 'getMarketPrices should return an array');
+  assert(prices.length > 0, 'getMarketPrices should return at least 1 option price');
+
+  for (const p of prices) {
+    assert(typeof p.choiceIndex === 'number', 'choiceIndex should be a number');
+    assert(typeof p.optionName === 'string', 'optionName should be a string');
+    assert(typeof p.currentPrice === 'bigint', 'currentPrice should be bigint');
+    console.log(`  • Option ${p.choiceIndex} "${p.optionName}": price = ${p.currentPrice}`);
+  }
+
+  log('Prices', prices);
+
   console.log('\n✓ test-read-markets passed');
 }
 
