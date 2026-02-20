@@ -5,14 +5,11 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { arbitrum } from 'viem/chains';
 import { Rain } from '../src/index.js';
 
-// ── Load .env ──────────────────────────────────────────────────────────────────
+// ── Load .env (optional — missing file is OK for read-only scripts) ────────
 
 function loadEnv(): Record<string, string> {
   const envPath = path.resolve(import.meta.dirname, '..', '.env');
-  if (!fs.existsSync(envPath)) {
-    console.error('Missing .env file. Copy .env.example → .env and fill in TEST_PRIVATE_KEY.');
-    process.exit(1);
-  }
+  if (!fs.existsSync(envPath)) return {};
   const vars: Record<string, string> = {};
   for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
     const trimmed = line.trim();
@@ -30,44 +27,57 @@ function loadEnv(): Record<string, string> {
 }
 
 const env = loadEnv();
-
-// ── Validate ───────────────────────────────────────────────────────────────────
-
-const privateKey = env.TEST_PRIVATE_KEY;
-if (!privateKey || !privateKey.startsWith('0x') || privateKey === '0x...') {
-  console.error('TEST_PRIVATE_KEY is missing or invalid in .env');
-  process.exit(1);
-}
-
 const rpcUrl = env.TEST_RPC_URL || undefined;
 
-// ── SDK ────────────────────────────────────────────────────────────────────────
+// ── SDK (always available) ─────────────────────────────────────────────────
 
 export const rain = new Rain({
   environment: 'development',
   ...(rpcUrl ? { rpcUrl } : {}),
 });
 
-// ── Viem clients ───────────────────────────────────────────────────────────────
+// ── Wallet setup (lazy — only required by scripts that send txs) ───────────
 
-const account = privateKeyToAccount(privateKey as `0x${string}`);
+let _walletClient: WalletClient | undefined;
+let _publicClient: PublicClient | undefined;
+let _walletAddress: `0x${string}` | undefined;
 
-const transport = http(rpcUrl || 'https://arb1.arbitrum.io/rpc');
+function requireWallet() {
+  if (_walletClient) return;
 
-export const walletClient: WalletClient = createWalletClient({
-  account,
-  chain: arbitrum,
-  transport,
-});
+  const privateKey = env.TEST_PRIVATE_KEY;
+  if (!privateKey || !privateKey.startsWith('0x') || privateKey === '0x...') {
+    console.error(
+      'TEST_PRIVATE_KEY is missing or invalid.\n' +
+      'Copy .env.example → .env and fill in a funded Arbitrum wallet key.'
+    );
+    process.exit(1);
+  }
 
-export const publicClient: PublicClient = createPublicClient({
-  chain: arbitrum,
-  transport,
-});
+  const account = privateKeyToAccount(privateKey as `0x${string}`);
+  const transport = http(rpcUrl || 'https://arb1.arbitrum.io/rpc');
 
-export const walletAddress = account.address;
+  _walletClient = createWalletClient({ account, chain: arbitrum, transport });
+  _publicClient = createPublicClient({ chain: arbitrum, transport });
+  _walletAddress = account.address;
+}
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+export function getWalletClient(): WalletClient {
+  requireWallet();
+  return _walletClient!;
+}
+
+export function getPublicClient(): PublicClient {
+  requireWallet();
+  return _publicClient!;
+}
+
+export function getWalletAddress(): `0x${string}` {
+  requireWallet();
+  return _walletAddress!;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 export function log(label: string, data?: unknown) {
   console.log(`\n[${label}]`);
@@ -88,6 +98,7 @@ export function assert(condition: boolean, message: string): asserts condition {
 }
 
 export async function waitForTx(hash: Hash): Promise<TransactionReceipt> {
+  const publicClient = getPublicClient();
   log('Waiting for tx', hash);
   const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 60_000 });
   if (receipt.status === 'reverted') {

@@ -1,8 +1,12 @@
-import { rain, walletClient, publicClient, walletAddress, log, assert, waitForTx, erc20BalanceOfAbi } from './helpers.js';
+import { rain, getWalletClient, getPublicClient, getWalletAddress, log, assert, waitForTx, erc20BalanceOfAbi } from './helpers.js';
 
 const BUY_AMOUNT = 1_000_000n; // 1 USDT (6 decimals)
 
 async function main() {
+  const walletClient = getWalletClient();
+  const publicClient = getPublicClient();
+  const walletAddress = getWalletAddress();
+
   // 1. Fetch a live market
   log('Fetching a live market');
   const markets = await rain.getPublicMarkets({ limit: 10 });
