@@ -21,6 +21,7 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
+        "test:integration": "tsx scripts/test-all.ts",
         "prepublishOnly": "npm run build"
     },
     "keywords": [
@@ -44,6 +45,7 @@
         "ethers": "^6.16.0"
     },
     "devDependencies": {
+        "tsx": "^4.21.0",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18"
     }
