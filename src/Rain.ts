@@ -9,6 +9,8 @@ import { buildCreateMarketRawTx } from './tx/CreateMarket/buildCreateMarketRawTx
 import { RainCoreConfig, RainEnvironment } from './types.js';
 import { ALLOWED_ENVIRONMENTS, ENV_CONFIG, getRandomRpc } from './config/environments.js';
 import { buildClaimRawTx } from './tx/ClaimFunds/buildClaimFundsRawTx.js';
+import { AccountBalanceResult } from './accounts/types.js';
+import { getSmartAccountBalance } from './accounts/getSmartAccountBalance.js';
 
 export class Rain {
 
@@ -70,6 +72,13 @@ export class Rain {
 
   async getMarketPrices(marketId: string): Promise<OptionPrice[]> {
     return getMarketPrices({ marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
+  }
+
+  async getSmartAccountBalance(params: {
+    address: `0x${string}`;
+    tokenAddresses: `0x${string}`[];
+  }): Promise<AccountBalanceResult> {
+    return getSmartAccountBalance({ ...params, rpcUrl: this.rpcUrl! });
   }
 
 }
