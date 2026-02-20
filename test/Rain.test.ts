@@ -4,10 +4,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('../src/markets/getMarkets.js', () => ({
   getMarkets: vi.fn().mockResolvedValue([]),
 }));
+vi.mock('../src/markets/getMarketDetails.js', () => ({
+  getMarketDetails: vi.fn().mockResolvedValue({ id: 'test', title: 'Mock' }),
+}));
 
 import { Rain } from '../src/Rain.js';
 import { ENV_CONFIG, ALLOWED_ENVIRONMENTS } from '../src/config/environments.js';
 import { getMarkets } from '../src/markets/getMarkets.js';
+import { getMarketDetails } from '../src/markets/getMarketDetails.js';
 
 describe('Rain constructor', () => {
   it('defaults to development environment', () => {
@@ -97,5 +101,35 @@ describe('Rain.getPublicMarkets', () => {
     const rain = new Rain();
     const result = await rain.getPublicMarkets({});
     expect(result).toEqual(mockMarkets);
+  });
+});
+
+describe('Rain.getMarketDetails', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls getMarketDetails with correct params', async () => {
+    const rain = new Rain({ environment: 'development' });
+    await rain.getMarketDetails('my-market-id');
+
+    expect(getMarketDetails).toHaveBeenCalledWith(
+      expect.objectContaining({
+        marketId: 'my-market-id',
+        apiUrl: ENV_CONFIG.development.apiUrl,
+      })
+    );
+    // rpcUrl should be present (string)
+    const callArgs = vi.mocked(getMarketDetails).mock.calls[0][0];
+    expect(typeof callArgs.rpcUrl).toBe('string');
+  });
+
+  it('returns the result from getMarketDetails', async () => {
+    const mockDetails = { id: 'abc', title: 'Detail Test' };
+    vi.mocked(getMarketDetails).mockResolvedValue(mockDetails as any);
+
+    const rain = new Rain();
+    const result = await rain.getMarketDetails('abc');
+    expect(result).toEqual(mockDetails);
   });
 });

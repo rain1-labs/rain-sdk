@@ -1,5 +1,6 @@
-import { GetMarketsParams, Market } from './markets/types.js';
+import { GetMarketsParams, Market, MarketDetails } from './markets/types.js';
 import { getMarkets } from './markets/getMarkets.js';
+import { getMarketDetails } from './markets/getMarketDetails.js';
 import { ApproveTxParams, ClaimTxParams, CreateMarketTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction } from './tx/types.js';
 import { buildEnterOptionRawTx, buildLimitBuyOrderRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
@@ -17,7 +18,7 @@ export class Rain {
   private readonly rpcUrl?: string;
 
   constructor(config: RainCoreConfig = {}) {
-    const { environment = "development", rpcUrl } = config;
+    const { environment = "development", rpcUrl, apiUrl } = config;
 
     function isValidEnvironment(env: string): env is RainEnvironment {
       return ALLOWED_ENVIRONMENTS.includes(env as RainEnvironment);
@@ -32,7 +33,7 @@ export class Rain {
     this.rpcUrl = rpcUrl ?? getRandomRpc();
     const envConfig = ENV_CONFIG[this.environment];
     this.marketFactory = envConfig.market_factory_address
-    this.apiUrl = envConfig.apiUrl;
+    this.apiUrl = apiUrl ?? envConfig.apiUrl;
     this.distute_initial_timer = envConfig.dispute_initial_timer;
   }
 
@@ -60,6 +61,10 @@ export class Rain {
 
   async buildClaimTx(params: ClaimTxParams): Promise<RawTransaction> {
     return buildClaimRawTx({ ...params, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl });
+  }
+
+  async getMarketDetails(marketId: string): Promise<MarketDetails> {
+    return getMarketDetails({ marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
   }
 
 }

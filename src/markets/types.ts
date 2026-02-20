@@ -20,3 +20,46 @@ export interface Market {
     status: MarketStatus;
     // add more fields as your API returns
 }
+
+export interface MarketOption {
+    choiceIndex: number;
+    optionName: string;
+    currentPrice: bigint;
+    totalFunds: bigint;
+    totalVotes: bigint;
+}
+
+export interface MarketDetails {
+    // From API
+    id: string;
+    title: string;
+    status: MarketStatus;
+    contractAddress: `0x${string}`;
+    options: MarketOption[];
+
+    // From on-chain
+    poolState: number;
+    numberOfOptions: bigint;
+    startTime: bigint;
+    endTime: bigint;
+    oracleEndTime: bigint;
+    allFunds: bigint;
+    allVotes: bigint;
+    totalLiquidity: bigint;
+    winner: bigint;
+    poolFinalized: boolean;
+    isPublic: boolean;
+    baseToken: `0x${string}`;
+    baseTokenDecimals: bigint;
+    poolOwner: `0x${string}`;
+    resolver: `0x${string}`;
+    resolverIsAI: boolean;
+    isDisputed: boolean;
+    isAppealed: boolean;
+}
+
+export interface GetMarketDetailsParams {
+    marketId: string;
+    apiUrl: string;
+    rpcUrl: string;
+}
