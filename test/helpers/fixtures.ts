@@ -105,6 +105,15 @@ export function makePerOptionMulticallResults(
   ]);
 }
 
+/**
+ * Produces N success results for N options (getCurrentPrice only).
+ */
+export function makePriceMulticallResults(
+  prices: bigint[]
+): MulticallResult[] {
+  return prices.map((price) => ({ status: 'success' as const, result: price }));
+}
+
 export const ERC20_BALANCE_OF_ABI = [
   {
     inputs: [{ name: 'account', type: 'address' }],

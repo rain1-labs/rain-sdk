@@ -63,3 +63,11 @@ export interface GetMarketDetailsParams {
     apiUrl: string;
     rpcUrl: string;
 }
+
+export interface OptionPrice {
+    choiceIndex: number;
+    optionName: string;
+    currentPrice: bigint;
+}
+
+export type GetMarketPricesParams = GetMarketDetailsParams;

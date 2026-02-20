@@ -1,6 +1,7 @@
-import { GetMarketsParams, Market, MarketDetails } from './markets/types.js';
+import { GetMarketsParams, Market, MarketDetails, OptionPrice } from './markets/types.js';
 import { getMarkets } from './markets/getMarkets.js';
 import { getMarketDetails } from './markets/getMarketDetails.js';
+import { getMarketPrices } from './markets/getMarketPrices.js';
 import { ApproveTxParams, ClaimTxParams, CreateMarketTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction } from './tx/types.js';
 import { buildEnterOptionRawTx, buildLimitBuyOrderRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
@@ -65,6 +66,10 @@ export class Rain {
 
   async getMarketDetails(marketId: string): Promise<MarketDetails> {
     return getMarketDetails({ marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
+  }
+
+  async getMarketPrices(marketId: string): Promise<OptionPrice[]> {
+    return getMarketPrices({ marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
   }
 
 }
