@@ -1,8 +1,8 @@
 export const ALLOWED_ENVIRONMENTS = ["development", "stage", "production"] as const;
 export const DEFAULT_RPCS: string[] = [
-    "https://arbitrum.meowrpc.com",
-    "https://rpc.sentio.xyz/arbitrum-one",
-    "https://rpc.owlracle.info/arb/70d38ce1826c4a60bb2a8e05a6c8b20f"
+    "https://arb1.arbitrum.io/rpc",
+    "https://arbitrum-one.publicnode.com",
+    "https://rpc.sentio.xyz/arbitrum-one"
 ]
 
 export function getRandomRpc(): string {
