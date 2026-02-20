@@ -11,6 +11,7 @@ import { ALLOWED_ENVIRONMENTS, ENV_CONFIG, getRandomRpc } from './config/environ
 import { buildClaimRawTx } from './tx/ClaimFunds/buildClaimFundsRawTx.js';
 import { AccountBalanceResult } from './accounts/types.js';
 import { getSmartAccountBalance } from './accounts/getSmartAccountBalance.js';
+import { getEOAFromSmartAccount } from './accounts/getEOAFromSmartAccount.js';
 
 export class Rain {
 
@@ -79,6 +80,10 @@ export class Rain {
     tokenAddresses: `0x${string}`[];
   }): Promise<AccountBalanceResult> {
     return getSmartAccountBalance({ ...params, rpcUrl: this.rpcUrl! });
+  }
+
+  async getEOAFromSmartAccount(smartAccountAddress: `0x${string}`): Promise<`0x${string}`> {
+    return getEOAFromSmartAccount({ smartAccountAddress, rpcUrl: this.rpcUrl! });
   }
 
 }
