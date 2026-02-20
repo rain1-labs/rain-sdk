@@ -74,24 +74,25 @@ export async function getMarketDetails(
   const optionCount = apiOptions.length;
   const perOptionContracts = [];
   for (let i = 0; i < optionCount; i++) {
+    const idx = BigInt(apiOptions[i].choiceIndex ?? i);
     perOptionContracts.push(
       {
         address: contractAddress,
         abi: TradePoolAbi,
         functionName: 'getCurrentPrice',
-        args: [BigInt(i)],
+        args: [idx],
       },
       {
         address: contractAddress,
         abi: TradePoolAbi,
         functionName: 'totalFunds',
-        args: [BigInt(i)],
+        args: [idx],
       },
       {
         address: contractAddress,
         abi: TradePoolAbi,
         functionName: 'totalVotes',
-        args: [BigInt(i)],
+        args: [idx],
       },
     );
   }

@@ -34,11 +34,11 @@ export async function getMarketPrices(
   }
 
   // 3. Single multicall batch — 1 call per option: getCurrentPrice
-  const priceContracts = apiOptions.map((_opt, i) => ({
+  const priceContracts = apiOptions.map((opt, i) => ({
     address: contractAddress,
     abi: TradePoolAbi,
     functionName: 'getCurrentPrice',
-    args: [BigInt(i)],
+    args: [BigInt(opt.choiceIndex ?? i)],
   }));
 
   const priceResults: readonly MulticallResult[] = await multicallRead(rpcUrl, priceContracts);
