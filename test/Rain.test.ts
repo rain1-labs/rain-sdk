@@ -10,12 +10,16 @@ vi.mock('../src/markets/getMarketDetails.js', () => ({
 vi.mock('../src/markets/getMarketPrices.js', () => ({
   getMarketPrices: vi.fn().mockResolvedValue([]),
 }));
+vi.mock('../src/accounts/getEOAFromSmartAccount.js', () => ({
+  getEOAFromSmartAccount: vi.fn().mockResolvedValue('0xOwnerAddress'),
+}));
 
 import { Rain } from '../src/Rain.js';
 import { ENV_CONFIG, ALLOWED_ENVIRONMENTS } from '../src/config/environments.js';
 import { getMarkets } from '../src/markets/getMarkets.js';
 import { getMarketDetails } from '../src/markets/getMarketDetails.js';
 import { getMarketPrices } from '../src/markets/getMarketPrices.js';
+import { getEOAFromSmartAccount } from '../src/accounts/getEOAFromSmartAccount.js';
 
 describe('Rain constructor', () => {
   it('defaults to development environment', () => {
@@ -166,5 +170,32 @@ describe('Rain.getMarketPrices', () => {
     const rain = new Rain();
     const result = await rain.getMarketPrices('abc');
     expect(result).toEqual(mockPrices);
+  });
+});
+
+describe('Rain.getEOAFromSmartAccount', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls getEOAFromSmartAccount with smartAccountAddress and rpcUrl', async () => {
+    const rain = new Rain({ environment: 'development' });
+    await rain.getEOAFromSmartAccount('0xABCDEF1234567890ABCDEF1234567890ABCDEF12');
+
+    expect(getEOAFromSmartAccount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        smartAccountAddress: '0xABCDEF1234567890ABCDEF1234567890ABCDEF12',
+      })
+    );
+    const callArgs = vi.mocked(getEOAFromSmartAccount).mock.calls[0][0];
+    expect(typeof callArgs.rpcUrl).toBe('string');
+  });
+
+  it('returns the owner address', async () => {
+    vi.mocked(getEOAFromSmartAccount).mockResolvedValue('0x1234000000000000000000000000000000005678');
+
+    const rain = new Rain();
+    const result = await rain.getEOAFromSmartAccount('0xABCDEF1234567890ABCDEF1234567890ABCDEF12');
+    expect(result).toBe('0x1234000000000000000000000000000000005678');
   });
 });
