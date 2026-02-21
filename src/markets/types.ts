@@ -86,3 +86,21 @@ export interface MarketVolume {
 }
 
 export type GetMarketVolumeParams = GetMarketDetailsParams;
+
+export interface OptionLiquidity {
+  choiceIndex: number;
+  optionName: string;
+  totalFunds: bigint;
+  firstBuyOrderPrice: bigint;
+  firstSellOrderPrice: bigint;
+}
+
+export interface MarketLiquidity {
+  marketId: string;
+  contractAddress: `0x${string}`;
+  totalLiquidity: bigint;
+  allFunds: bigint;
+  optionLiquidity: OptionLiquidity[];
+}
+
+export type GetMarketLiquidityParams = GetMarketDetailsParams;
