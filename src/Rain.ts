@@ -19,9 +19,10 @@ import { getEOAFromSmartAccount } from './accounts/getEOAFromSmartAccount.js';
 import { PositionByMarket, PositionsResult } from './positions/types.js';
 import { getPositions } from './positions/getPositions.js';
 import { getPositionByMarket } from './positions/getPositionByMarket.js';
-import { GetTransactionsParams, GetTransactionDetailsParams, TransactionsResult, TransactionDetails } from './transactions/types.js';
+import { GetTransactionsParams, GetTransactionDetailsParams, GetMarketTransactionsParams, TransactionsResult, TransactionDetails, MarketTransactionsResult } from './transactions/types.js';
 import { getTransactions } from './transactions/getTransactions.js';
 import { getTransactionDetails } from './transactions/getTransactionDetails.js';
+import { getMarketTransactions } from './transactions/getMarketTransactions.js';
 
 export class Rain {
 
@@ -174,6 +175,16 @@ export class Rain {
       throw new Error('rpcUrl is required — pass it in the Rain constructor config or in the method params');
     }
     return getTransactionDetails({ ...params, subgraphUrl, rpcUrl });
+  }
+
+  async getMarketTransactions(
+    params: Omit<GetMarketTransactionsParams, 'subgraphUrl'> & { subgraphUrl?: string }
+  ): Promise<MarketTransactionsResult> {
+    const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
+    if (!subgraphUrl) {
+      throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
+    }
+    return getMarketTransactions({ ...params, subgraphUrl });
   }
 
 }

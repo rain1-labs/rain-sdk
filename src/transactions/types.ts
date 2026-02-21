@@ -77,3 +77,20 @@ export interface GetTransactionDetailsParams {
   subgraphUrl: string;
   rpcUrl: string;
 }
+
+export interface GetMarketTransactionsParams {
+  marketAddress: `0x${string}`;
+  types?: TransactionType[];
+  fromTimestamp?: bigint;
+  toTimestamp?: bigint;
+  first?: number;
+  skip?: number;
+  orderDirection?: 'asc' | 'desc';
+  subgraphUrl: string;
+}
+
+export interface MarketTransactionsResult {
+  marketAddress: `0x${string}`;
+  transactions: Transaction[];
+  total: number;
+}

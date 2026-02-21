@@ -1,70 +1,53 @@
 import { subgraphQuery } from '../utils/subgraph.js';
 import {
   Transaction,
-  TransactionsResult,
-  GetTransactionsParams,
+  GetMarketTransactionsParams,
+  MarketTransactionsResult,
 } from './types.js';
 import {
   ENTITY_FIELDS,
   ENTITY_CONFIG,
-  TAKER_ENTITIES,
   getEnabledEntities,
   parseEntity,
 } from './shared.js';
 
 function buildWhereClause(
-  addressField: string,
-  address: string,
-  marketAddress?: string,
+  poolAddress: string,
   fromTimestamp?: bigint,
   toTimestamp?: bigint,
 ): string {
-  const parts: string[] = [`${addressField}: "${address}"`];
-  if (marketAddress) parts.push(`poolAddress: "${marketAddress}"`);
+  const parts: string[] = [`poolAddress: "${poolAddress}"`];
   if (fromTimestamp !== undefined) parts.push(`blockTimestamp_gte: "${fromTimestamp.toString()}"`);
   if (toTimestamp !== undefined) parts.push(`blockTimestamp_lte: "${toTimestamp.toString()}"`);
   return `{ ${parts.join(', ')} }`;
 }
 
 function buildQuery(params: {
-  address: string;
-  marketAddress?: string;
+  marketAddress: string;
   fromTimestamp?: bigint;
   toTimestamp?: bigint;
   limit: number;
   orderDirection: string;
   enabledEntities: string[];
 }): string {
-  const { address, marketAddress, fromTimestamp, toTimestamp, limit, orderDirection, enabledEntities } = params;
-  const addr = address.toLowerCase();
-  const pool = marketAddress?.toLowerCase();
+  const { marketAddress, fromTimestamp, toTimestamp, limit, orderDirection, enabledEntities } = params;
+  const pool = marketAddress.toLowerCase();
+  const where = buildWhereClause(pool, fromTimestamp, toTimestamp);
 
   const parts: string[] = [];
 
   for (const entity of enabledEntities) {
-    const cfg = ENTITY_CONFIG[entity];
     const fields = ENTITY_FIELDS[entity as keyof typeof ENTITY_FIELDS];
-    const where = buildWhereClause(cfg.addressField, addr, pool, fromTimestamp, toTimestamp);
-
     parts.push(
       `  ${entity}(where: ${where}, orderBy: blockTimestamp, orderDirection: ${orderDirection}, first: ${limit}) { ${fields} }`
     );
-
-    // For execute orders, also query where user is taker
-    if (entity in TAKER_ENTITIES) {
-      const takerWhere = buildWhereClause('taker', addr, pool, fromTimestamp, toTimestamp);
-      parts.push(
-        `  ${entity}AsTaker: ${entity}(where: ${takerWhere}, orderBy: blockTimestamp, orderDirection: ${orderDirection}, first: ${limit}) { ${fields} }`
-      );
-    }
   }
 
   return `{\n${parts.join('\n')}\n}`;
 }
 
-export async function getTransactions(params: GetTransactionsParams): Promise<TransactionsResult> {
+export async function getMarketTransactions(params: GetMarketTransactionsParams): Promise<MarketTransactionsResult> {
   const {
-    address,
     marketAddress,
     types,
     fromTimestamp,
@@ -76,12 +59,9 @@ export async function getTransactions(params: GetTransactionsParams): Promise<Tr
   } = params;
 
   const enabledEntities = getEnabledEntities(types);
-
-  // Fetch enough from each entity to cover skip + first after merging
   const fetchLimit = first + skip;
 
   const query = buildQuery({
-    address,
     marketAddress,
     fromTimestamp,
     toTimestamp,
@@ -92,7 +72,6 @@ export async function getTransactions(params: GetTransactionsParams): Promise<Tr
 
   const data = await subgraphQuery<Record<string, any[]>>(subgraphUrl, query);
 
-  // Parse all results into unified Transaction objects
   const allTransactions: Transaction[] = [];
   const seenIds = new Set<string>();
 
@@ -104,32 +83,20 @@ export async function getTransactions(params: GetTransactionsParams): Promise<Tr
         allTransactions.push(parseEntity(entity, item));
       }
     }
-
-    // Also parse taker results for execute orders
-    if (entity in TAKER_ENTITIES) {
-      const takerItems = data[`${entity}AsTaker`] ?? [];
-      for (const item of takerItems) {
-        if (!seenIds.has(item.id)) {
-          seenIds.add(item.id);
-          allTransactions.push(parseEntity(entity, item));
-        }
-      }
-    }
   }
 
   // Sort by timestamp
   allTransactions.sort((a, b) => {
-    const diff = orderDirection === 'desc'
+    return orderDirection === 'desc'
       ? Number(b.timestamp - a.timestamp)
       : Number(a.timestamp - b.timestamp);
-    return diff;
   });
 
   // Apply pagination
   const paginated = allTransactions.slice(skip, skip + first);
 
   return {
-    address,
+    marketAddress,
     transactions: paginated,
     total: allTransactions.length,
   };
