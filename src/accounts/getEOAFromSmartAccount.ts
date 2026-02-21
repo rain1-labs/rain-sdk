@@ -1,5 +1,18 @@
 import { createRpcClient } from '../utils/multicall.js';
 
+const GetFallbackSignerDataAbi = [
+  {
+    type: 'function',
+    name: 'getFallbackSignerData',
+    inputs: [],
+    outputs: [
+      { name: '', type: 'address' },
+      { name: '', type: 'bool' },
+    ],
+    stateMutability: 'view',
+  },
+] as const;
+
 const OwnerAbi = [
   {
     type: 'function',
@@ -18,11 +31,41 @@ export async function getEOAFromSmartAccount(params: {
   if (!smartAccountAddress) throw new Error('smartAccountAddress is required');
 
   const client = createRpcClient(rpcUrl);
-  const owner = await client.readContract({
-    address: smartAccountAddress,
-    abi: OwnerAbi,
-    functionName: 'owner',
-  });
 
-  return owner as `0x${string}`;
+  // Verify the address is a contract
+  const code = await client.getCode({ address: smartAccountAddress });
+  if (!code || code === '0x') {
+    throw new Error(
+      `Address ${smartAccountAddress} is not a smart contract. Provide a smart account address, not an EOA.`
+    );
+  }
+
+  // Try getFallbackSignerData() first (SemiModularAccountV2 — current Alchemy default)
+  try {
+    const [owner] = await client.readContract({
+      address: smartAccountAddress,
+      abi: GetFallbackSignerDataAbi,
+      functionName: 'getFallbackSignerData',
+    });
+    return owner as `0x${string}`;
+  } catch {
+    // Not a SemiModularAccountV2, try next method
+  }
+
+  // Fall back to owner() (LightAccount / ERC-173)
+  try {
+    const owner = await client.readContract({
+      address: smartAccountAddress,
+      abi: OwnerAbi,
+      functionName: 'owner',
+    });
+    return owner as `0x${string}`;
+  } catch {
+    // Neither method worked
+  }
+
+  throw new Error(
+    `Could not determine owner of smart account ${smartAccountAddress}. ` +
+      `Tried getFallbackSignerData() (SemiModularAccountV2) and owner() (ERC-173), both failed.`
+  );
 }
