@@ -1,8 +1,8 @@
 import { encodeFunctionData } from 'viem';
 import { TradePoolAbi } from '../abi/TradeMarketsAbi.js';
-import { EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction } from './types.js';
+import { EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams } from './types.js';
 import { convertToWeiEthers } from '../utils/helpers.js';
-import { ENTER_OPTION, PLACE_BUY_ORDER } from '../constants/contractmethods.js';
+import { ENTER_OPTION, PLACE_BUY_ORDER, PLACE_SELL_ORDER } from '../constants/contractmethods.js';
 export function buildEnterOptionRawTx(
     params: EnterOptionTxParams
 ): RawTransaction {
@@ -68,6 +68,51 @@ export function buildLimitBuyOrderRawTx(
                 BigInt(selectedOption),
                 pricePerShareInEther,
                 buyAmountInWei,
+            ],
+        }),
+    };
+}
+
+export function buildSellOptionRawTx(
+    params: SellOptionTxParams
+): RawTransaction {
+
+    const { marketContractAddress, selectedOption, pricePerShare, shares } = params;
+
+    if (!marketContractAddress) {
+        throw new Error("market address is required");
+    }
+
+    if (selectedOption === undefined) {
+        throw new Error("selectedOption is required");
+    }
+
+    if (!pricePerShare) {
+        throw new Error("price per share is required");
+    }
+
+    if (pricePerShare <= 0 || pricePerShare >= 1) {
+        throw new Error("price per share should be in between 0 to 1, make sure to convert to correct decimals");
+    }
+
+    if (!shares || shares <= 0n) {
+        throw new Error("shares must be greater than 0");
+    }
+
+    const pricePerShareInEther = convertToWeiEthers(
+        pricePerShare.toString(),
+        18
+    );
+
+    return {
+        to: marketContractAddress,
+        data: encodeFunctionData({
+            abi: TradePoolAbi,
+            functionName: PLACE_SELL_ORDER,
+            args: [
+                BigInt(selectedOption),
+                pricePerShareInEther,
+                shares,
             ],
         }),
     };

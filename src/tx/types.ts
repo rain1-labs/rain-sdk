@@ -64,6 +64,14 @@ export interface WithdrawFromSmartAccountTxParams {
     amount: bigint;
 }
 
+export interface SellOptionTxParams {
+    marketContractAddress: `0x${string}`;
+    selectedOption: number;
+    pricePerShare: number;       // 0 < price < 1
+    shares: bigint;              // number of votes/shares to sell
+    tokenDecimals?: number;      // defaults to 6 (USDT)
+}
+
 export interface GetUserOptionSharesParams {
     options: [{ choiceIndex: number, optionName: string }];
     walletAddress: `0x${string}`;
