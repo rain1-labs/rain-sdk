@@ -1,7 +1,8 @@
-import { GetMarketsParams, Market, MarketDetails, OptionPrice } from './markets/types.js';
+import { GetMarketsParams, Market, MarketDetails, MarketVolume, OptionPrice } from './markets/types.js';
 import { getMarkets } from './markets/getMarkets.js';
 import { getMarketDetails } from './markets/getMarketDetails.js';
 import { getMarketPrices } from './markets/getMarketPrices.js';
+import { getMarketVolume } from './markets/getMarketVolume.js';
 import { ApproveTxParams, CancelOrdersTxParams, ClaimTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, CreateMarketTxParams, DepositToSmartAccountTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams, WithdrawFromSmartAccountTxParams } from './tx/types.js';
 import { buildEnterOptionRawTx, buildLimitBuyOrderRawTx, buildSellOptionRawTx, buildCancelBuyOrdersRawTx, buildCancelSellOrdersRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
@@ -118,6 +119,10 @@ export class Rain {
 
   async getMarketPrices(marketId: string): Promise<OptionPrice[]> {
     return getMarketPrices({ marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
+  }
+
+  async getMarketVolume(marketId: string): Promise<MarketVolume> {
+    return getMarketVolume({ marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
   }
 
   async getSmartAccountBalance(params: {

@@ -71,3 +71,18 @@ export interface OptionPrice {
 }
 
 export type GetMarketPricesParams = GetMarketDetailsParams;
+
+export interface OptionVolume {
+  choiceIndex: number;
+  optionName: string;
+  volume: bigint;
+}
+
+export interface MarketVolume {
+  marketId: string;
+  contractAddress: `0x${string}`;
+  totalVolume: bigint;
+  optionVolumes: OptionVolume[];
+}
+
+export type GetMarketVolumeParams = GetMarketDetailsParams;
