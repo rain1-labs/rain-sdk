@@ -14,5 +14,6 @@ export interface RainCoreConfig {
   environment?: RainEnvironment;
   rpcUrl?: string;
   apiUrl?: string;
+  subgraphUrl?: string;
 }
 

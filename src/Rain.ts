@@ -19,6 +19,8 @@ import { getEOAFromSmartAccount } from './accounts/getEOAFromSmartAccount.js';
 import { PositionByMarket, PositionsResult } from './positions/types.js';
 import { getPositions } from './positions/getPositions.js';
 import { getPositionByMarket } from './positions/getPositionByMarket.js';
+import { GetTransactionsParams, TransactionsResult } from './transactions/types.js';
+import { getTransactions } from './transactions/getTransactions.js';
 
 export class Rain {
 
@@ -27,9 +29,10 @@ export class Rain {
   private readonly apiUrl: string;
   private readonly distute_initial_timer: number;
   private readonly rpcUrl?: string;
+  private readonly subgraphUrl?: string;
 
   constructor(config: RainCoreConfig = {}) {
-    const { environment = "development", rpcUrl, apiUrl } = config;
+    const { environment = "development", rpcUrl, apiUrl, subgraphUrl } = config;
 
     function isValidEnvironment(env: string): env is RainEnvironment {
       return ALLOWED_ENVIRONMENTS.includes(env as RainEnvironment);
@@ -46,6 +49,7 @@ export class Rain {
     this.marketFactory = envConfig.market_factory_address
     this.apiUrl = apiUrl ?? envConfig.apiUrl;
     this.distute_initial_timer = envConfig.dispute_initial_timer;
+    this.subgraphUrl = subgraphUrl;
   }
 
   async getPublicMarkets(params: GetMarketsParams): Promise<Market[]> {
@@ -147,6 +151,14 @@ export class Rain {
 
   async getPositionByMarket(address: `0x${string}`, marketId: string): Promise<PositionByMarket> {
     return getPositionByMarket({ address, marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
+  }
+
+  async getTransactions(params: Omit<GetTransactionsParams, 'subgraphUrl'> & { subgraphUrl?: string }): Promise<TransactionsResult> {
+    const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
+    if (!subgraphUrl) {
+      throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
+    }
+    return getTransactions({ ...params, subgraphUrl });
   }
 
 }
