@@ -2,13 +2,14 @@ import { GetMarketsParams, Market, MarketDetails, OptionPrice } from './markets/
 import { getMarkets } from './markets/getMarkets.js';
 import { getMarketDetails } from './markets/getMarketDetails.js';
 import { getMarketPrices } from './markets/getMarketPrices.js';
-import { ApproveTxParams, CancelOrdersTxParams, ClaimTxParams, CreateMarketTxParams, DepositToSmartAccountTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams, WithdrawFromSmartAccountTxParams } from './tx/types.js';
+import { ApproveTxParams, CancelOrdersTxParams, ClaimTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, CreateMarketTxParams, DepositToSmartAccountTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams, WithdrawFromSmartAccountTxParams } from './tx/types.js';
 import { buildEnterOptionRawTx, buildLimitBuyOrderRawTx, buildSellOptionRawTx, buildCancelBuyOrdersRawTx, buildCancelSellOrdersRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
 import { buildCreateMarketRawTx } from './tx/CreateMarket/buildCreateMarketRawTx.js';
 import { RainCoreConfig, RainEnvironment } from './types.js';
 import { ALLOWED_ENVIRONMENTS, ENV_CONFIG, getRandomRpc } from './config/environments.js';
 import { buildClaimRawTx } from './tx/ClaimFunds/buildClaimFundsRawTx.js';
+import { buildCloseMarketRawTx, buildChooseWinnerRawTx, buildResolveMarketRawTx } from './tx/ResolveMarket/buildResolveMarketRawTx.js';
 import { buildTransferRawTx } from './tx/buildTransferRawTx.js';
 import { AccountBalanceResult } from './accounts/types.js';
 import { getSmartAccountBalance } from './accounts/getSmartAccountBalance.js';
@@ -81,6 +82,18 @@ export class Rain {
 
   async buildClaimTx(params: ClaimTxParams): Promise<RawTransaction> {
     return buildClaimRawTx({ ...params, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl });
+  }
+
+  async buildCloseMarketTx(params: CloseMarketTxParams): Promise<RawTransaction> {
+    return buildCloseMarketRawTx({ ...params, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl });
+  }
+
+  async buildChooseWinnerTx(params: ChooseWinnerTxParams): Promise<RawTransaction> {
+    return buildChooseWinnerRawTx({ ...params, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl });
+  }
+
+  async buildResolveMarketTx(params: ResolveMarketTxParams): Promise<RawTransaction[]> {
+    return buildResolveMarketRawTx({ ...params, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl });
   }
 
   buildDepositToSmartAccountTx(params: DepositToSmartAccountTxParams): RawTransaction {

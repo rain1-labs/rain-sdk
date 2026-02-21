@@ -7,3 +7,5 @@ export const CLAIM = "claim"
 export const TRANSFER_TOKEN = 'transfer'
 export const CANCEL_BUY_ORDERS = 'cancelBuyOrders'
 export const CANCEL_SELL_ORDERS = 'cancelSellOrders'
+export const CLOSE_POOL = 'closePool'
+export const CHOOSE_WINNER = 'chooseWinner'

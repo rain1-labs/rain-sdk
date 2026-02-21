@@ -5,4 +5,4 @@ export { createRpcClient, multicallRead } from './utils/multicall.js';
 export type { MarketDetails, MarketOption, GetMarketDetailsParams, OptionPrice, GetMarketPricesParams } from './markets/types.js';
 export type { AccountBalanceResult, TokenBalance } from './accounts/types.js';
 export type { PositionsResult, MarketPosition, OptionPosition, GetPositionsParams, PositionByMarket, GetPositionByMarketParams } from './positions/types.js';
-export type { DepositToSmartAccountTxParams, WithdrawFromSmartAccountTxParams, SellOptionTxParams, CancelOrdersTxParams, RawTransaction } from './tx/types.js';
+export type { DepositToSmartAccountTxParams, WithdrawFromSmartAccountTxParams, SellOptionTxParams, CancelOrdersTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, RawTransaction } from './tx/types.js';

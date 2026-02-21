@@ -87,3 +87,23 @@ export interface GetUserOptionSharesParams {
     marketContractAddress: `0x${string}`;
     rpcUrl: string;
 }
+
+export interface CloseMarketTxParams {
+    marketId: string;
+    apiUrl?: string;
+    rpcUrl?: string;
+}
+
+export interface ChooseWinnerTxParams {
+    marketId: string;
+    winningOption: number; // 1-indexed
+    apiUrl?: string;
+    rpcUrl?: string;
+}
+
+export interface ResolveMarketTxParams {
+    marketId: string;
+    winningOption: number; // 1-indexed
+    apiUrl?: string;
+    rpcUrl?: string;
+}
