@@ -6,4 +6,4 @@ export type { MarketDetails, MarketOption, GetMarketDetailsParams, OptionPrice, 
 export type { AccountBalanceResult, TokenBalance } from './accounts/types.js';
 export type { PositionsResult, MarketPosition, OptionPosition, GetPositionsParams, PositionByMarket, GetPositionByMarketParams } from './positions/types.js';
 export type { DepositToSmartAccountTxParams, WithdrawFromSmartAccountTxParams, SellOptionTxParams, CancelOrdersTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, RawTransaction } from './tx/types.js';
-export type { Transaction, TransactionType, GetTransactionsParams, TransactionsResult, TransactionDetails, GetTransactionDetailsParams, GetMarketTransactionsParams, MarketTransactionsResult } from './transactions/types.js';
+export type { Transaction, TransactionType, GetTransactionsParams, TransactionsResult, TransactionDetails, GetTransactionDetailsParams, GetMarketTransactionsParams, MarketTransactionsResult, GetTradeHistoryParams, TradeHistoryResult } from './transactions/types.js';

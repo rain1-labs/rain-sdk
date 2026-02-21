@@ -94,3 +94,22 @@ export interface MarketTransactionsResult {
   transactions: Transaction[];
   total: number;
 }
+
+export interface GetTradeHistoryParams {
+  address: `0x${string}`;
+  marketAddress: `0x${string}`;
+  types?: TransactionType[];
+  fromTimestamp?: bigint;
+  toTimestamp?: bigint;
+  first?: number;
+  skip?: number;
+  orderDirection?: 'asc' | 'desc';
+  subgraphUrl: string;
+}
+
+export interface TradeHistoryResult {
+  address: `0x${string}`;
+  marketAddress: `0x${string}`;
+  transactions: Transaction[];
+  total: number;
+}
