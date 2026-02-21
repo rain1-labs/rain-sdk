@@ -13,6 +13,9 @@ vi.mock('../src/markets/getMarketPrices.js', () => ({
 vi.mock('../src/accounts/getEOAFromSmartAccount.js', () => ({
   getEOAFromSmartAccount: vi.fn().mockResolvedValue('0xOwnerAddress'),
 }));
+vi.mock('../src/positions/getPositions.js', () => ({
+  getPositions: vi.fn().mockResolvedValue({ address: '0x', markets: [] }),
+}));
 
 import { Rain } from '../src/Rain.js';
 import { ENV_CONFIG, ALLOWED_ENVIRONMENTS } from '../src/config/environments.js';
@@ -20,6 +23,7 @@ import { getMarkets } from '../src/markets/getMarkets.js';
 import { getMarketDetails } from '../src/markets/getMarketDetails.js';
 import { getMarketPrices } from '../src/markets/getMarketPrices.js';
 import { getEOAFromSmartAccount } from '../src/accounts/getEOAFromSmartAccount.js';
+import { getPositions } from '../src/positions/getPositions.js';
 
 describe('Rain constructor', () => {
   it('defaults to development environment', () => {
@@ -197,5 +201,37 @@ describe('Rain.getEOAFromSmartAccount', () => {
     const rain = new Rain();
     const result = await rain.getEOAFromSmartAccount('0xABCDEF1234567890ABCDEF1234567890ABCDEF12');
     expect(result).toBe('0x1234000000000000000000000000000000005678');
+  });
+});
+
+describe('Rain.getPositions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls getPositions with correct params', async () => {
+    const rain = new Rain({ environment: 'development' });
+    await rain.getPositions('0xABCDEF1234567890ABCDEF1234567890ABCDEF12');
+
+    expect(getPositions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        address: '0xABCDEF1234567890ABCDEF1234567890ABCDEF12',
+        apiUrl: ENV_CONFIG.development.apiUrl,
+      })
+    );
+    const callArgs = vi.mocked(getPositions).mock.calls[0][0];
+    expect(typeof callArgs.rpcUrl).toBe('string');
+  });
+
+  it('returns the result from getPositions', async () => {
+    const mockResult = {
+      address: '0xABCDEF1234567890ABCDEF1234567890ABCDEF12' as `0x${string}`,
+      markets: [{ marketId: 'test', title: 'Test', status: 'Live', contractAddress: '0x1111111111111111111111111111111111111111' as `0x${string}`, options: [], userLiquidity: 100n, claimed: false, dynamicPayout: [] }],
+    };
+    vi.mocked(getPositions).mockResolvedValue(mockResult);
+
+    const rain = new Rain();
+    const result = await rain.getPositions('0xABCDEF1234567890ABCDEF1234567890ABCDEF12');
+    expect(result).toEqual(mockResult);
   });
 });

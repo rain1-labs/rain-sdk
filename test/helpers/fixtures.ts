@@ -8,6 +8,7 @@ export const ADDR_FACTORY = '0x148DA7F2039B2B00633AC2ab566f59C8a4C86313' as cons
 export const ADDR_MARKET = '0x1111111111111111111111111111111111111111' as const;
 export const ADDR_MARKET_CONTRACT = '0x2222222222222222222222222222222222222222' as const;
 export const ADDR_ZERO = '0x0000000000000000000000000000000000000000' as const;
+export const ADDR_MARKET_CONTRACT_2 = '0x3333333333333333333333333333333333333333' as const;
 export const RPC_URL = 'https://arb1.arbitrum.io/rpc' as const;
 export const MOCK_MARKET_ID = 'mock-market-id-123' as const;
 
@@ -148,6 +149,66 @@ export function makeMulticallContracts() {
       functionName: 'decimals',
     },
   ] as const;
+}
+
+export const MOCK_API_PUBLIC_POOLS_RESPONSE = [
+  {
+    id: 'pool-1',
+    title: 'Will ETH reach $5000?',
+    status: 'Live',
+    contractAddress: ADDR_MARKET_CONTRACT,
+    options: [
+      { choiceIndex: 0, optionName: 'Yes' },
+      { choiceIndex: 1, optionName: 'No' },
+    ],
+  },
+  {
+    id: 'pool-2',
+    title: 'Will BTC reach $100k?',
+    status: 'Live',
+    contractAddress: ADDR_MARKET_CONTRACT_2,
+    options: [
+      { choiceIndex: 0, optionName: 'Yes' },
+      { choiceIndex: 1, optionName: 'No' },
+    ],
+  },
+];
+
+/**
+ * Produces multicall results for a single market's position reads:
+ *   3 per-market reads: userLiquidity, claimed, getDynamicPayout
+ *   4 per-option reads: userVotes, userVotesInEscrow, userAmountInEscrow, getCurrentPrice
+ */
+export function makePositionMulticallResults(
+  markets: {
+    userLiquidity: bigint;
+    claimed: boolean;
+    dynamicPayout: bigint[];
+    options: {
+      shares: bigint;
+      sharesInEscrow: bigint;
+      amountInEscrow: bigint;
+      currentPrice: bigint;
+    }[];
+  }[]
+): MulticallResult[] {
+  const results: MulticallResult[] = [];
+  for (const market of markets) {
+    results.push(
+      { status: 'success', result: market.userLiquidity },
+      { status: 'success', result: market.claimed },
+      { status: 'success', result: market.dynamicPayout },
+    );
+    for (const opt of market.options) {
+      results.push(
+        { status: 'success', result: opt.shares },
+        { status: 'success', result: opt.sharesInEscrow },
+        { status: 'success', result: opt.amountInEscrow },
+        { status: 'success', result: opt.currentPrice },
+      );
+    }
+  }
+  return results;
 }
 
 export function makeCreateMarketParams(

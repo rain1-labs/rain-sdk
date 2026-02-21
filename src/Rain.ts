@@ -12,6 +12,8 @@ import { buildClaimRawTx } from './tx/ClaimFunds/buildClaimFundsRawTx.js';
 import { AccountBalanceResult } from './accounts/types.js';
 import { getSmartAccountBalance } from './accounts/getSmartAccountBalance.js';
 import { getEOAFromSmartAccount } from './accounts/getEOAFromSmartAccount.js';
+import { PositionsResult } from './positions/types.js';
+import { getPositions } from './positions/getPositions.js';
 
 export class Rain {
 
@@ -84,6 +86,10 @@ export class Rain {
 
   async getEOAFromSmartAccount(smartAccountAddress: `0x${string}`): Promise<`0x${string}`> {
     return getEOAFromSmartAccount({ smartAccountAddress, rpcUrl: this.rpcUrl! });
+  }
+
+  async getPositions(address: `0x${string}`): Promise<PositionsResult> {
+    return getPositions({ address, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
   }
 
 }
