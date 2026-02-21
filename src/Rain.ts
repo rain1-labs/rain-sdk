@@ -2,13 +2,14 @@ import { GetMarketsParams, Market, MarketDetails, OptionPrice } from './markets/
 import { getMarkets } from './markets/getMarkets.js';
 import { getMarketDetails } from './markets/getMarketDetails.js';
 import { getMarketPrices } from './markets/getMarketPrices.js';
-import { ApproveTxParams, ClaimTxParams, CreateMarketTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction } from './tx/types.js';
+import { ApproveTxParams, ClaimTxParams, CreateMarketTxParams, DepositToSmartAccountTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, WithdrawFromSmartAccountTxParams } from './tx/types.js';
 import { buildEnterOptionRawTx, buildLimitBuyOrderRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
 import { buildCreateMarketRawTx } from './tx/CreateMarket/buildCreateMarketRawTx.js';
 import { RainCoreConfig, RainEnvironment } from './types.js';
 import { ALLOWED_ENVIRONMENTS, ENV_CONFIG, getRandomRpc } from './config/environments.js';
 import { buildClaimRawTx } from './tx/ClaimFunds/buildClaimFundsRawTx.js';
+import { buildTransferRawTx } from './tx/buildTransferRawTx.js';
 import { AccountBalanceResult } from './accounts/types.js';
 import { getSmartAccountBalance } from './accounts/getSmartAccountBalance.js';
 import { getEOAFromSmartAccount } from './accounts/getEOAFromSmartAccount.js';
@@ -68,6 +69,22 @@ export class Rain {
 
   async buildClaimTx(params: ClaimTxParams): Promise<RawTransaction> {
     return buildClaimRawTx({ ...params, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl });
+  }
+
+  buildDepositToSmartAccountTx(params: DepositToSmartAccountTxParams): RawTransaction {
+    return buildTransferRawTx({
+      tokenAddress: params.tokenAddress,
+      recipient: params.smartAccountAddress,
+      amount: params.amount,
+    });
+  }
+
+  buildWithdrawFromSmartAccountTx(params: WithdrawFromSmartAccountTxParams): RawTransaction {
+    return buildTransferRawTx({
+      tokenAddress: params.tokenAddress,
+      recipient: params.eoaAddress,
+      amount: params.amount,
+    });
   }
 
   async getMarketDetails(marketId: string): Promise<MarketDetails> {

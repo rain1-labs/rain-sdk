@@ -1,0 +1,26 @@
+import { encodeFunctionData } from "viem";
+import { ERC20Abi } from "../abi/ERC20Abi.js";
+import { RawTransaction } from "./types.js";
+import { TRANSFER_TOKEN } from "../constants/contractmethods.js";
+
+export function buildTransferRawTx(params: {
+    tokenAddress: `0x${string}`;
+    recipient: `0x${string}`;
+    amount: bigint;
+}): RawTransaction {
+    const { tokenAddress, recipient, amount } = params;
+
+    if (!tokenAddress) throw new Error("token address is required");
+    if (!recipient) throw new Error("recipient address is required");
+    if (amount <= 0n) throw new Error("amount must be greater than 0");
+
+    return {
+        to: tokenAddress,
+        data: encodeFunctionData({
+            abi: ERC20Abi,
+            functionName: TRANSFER_TOKEN,
+            args: [recipient, amount],
+        }),
+        value: 0n,
+    };
+}

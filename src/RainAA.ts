@@ -4,6 +4,7 @@ import { alchemy } from "@account-kit/infra";
 import { createSmartWalletClient } from "@account-kit/wallet-client";
 
 import { RainConfig } from './types.js';
+import { RawTransaction } from './tx/types.js';
 
 export class RainAA {
     private config: RainConfig;
@@ -79,6 +80,21 @@ export class RainAA {
             throw new Error('Rain not connected. Call rain.connect() first.');
         }
         return this._client;
+    }
+
+    /**
+     * Sends a raw transaction from the smart account.
+     */
+    async sendTransaction(rawTx: RawTransaction): Promise<`0x${string}`> {
+        if (!this._client) {
+            throw new Error('Rain not connected. Call rain.connect() first.');
+        }
+        const hash = await this._client.sendTransaction({
+            to: rawTx.to,
+            data: rawTx.data,
+            value: rawTx.value,
+        });
+        return hash;
     }
 
     /**

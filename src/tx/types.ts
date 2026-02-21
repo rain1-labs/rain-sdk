@@ -52,6 +52,18 @@ export interface ClaimTxParams {
     rpcUrl?: string;
 }
 
+export interface DepositToSmartAccountTxParams {
+    tokenAddress: `0x${string}`;
+    smartAccountAddress: `0x${string}`;
+    amount: bigint;
+}
+
+export interface WithdrawFromSmartAccountTxParams {
+    tokenAddress: `0x${string}`;
+    eoaAddress: `0x${string}`;
+    amount: bigint;
+}
+
 export interface GetUserOptionSharesParams {
     options: [{ choiceIndex: number, optionName: string }];
     walletAddress: `0x${string}`;
