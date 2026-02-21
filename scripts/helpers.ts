@@ -77,6 +77,14 @@ export function getWalletAddress(): `0x${string}` {
   return _walletAddress!;
 }
 
+/** Returns wallet address if .env is configured, undefined otherwise. Does not exit. */
+export function tryGetWalletAddress(): `0x${string}` | undefined {
+  const privateKey = env.TEST_PRIVATE_KEY;
+  if (!privateKey || !privateKey.startsWith('0x') || privateKey === '0x...') return undefined;
+  requireWallet();
+  return _walletAddress;
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 export function log(label: string, data?: unknown) {

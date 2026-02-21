@@ -1,4 +1,4 @@
-import { rain, log, assert } from './helpers.js';
+import { rain, log, assert, tryGetWalletAddress } from './helpers.js';
 
 async function main() {
   // 1. Fetch public markets
@@ -41,6 +41,30 @@ async function main() {
   }
 
   log('Prices', prices);
+
+  // 4. Fetch positions for the test wallet (or a zero-position address)
+  const posAddress = tryGetWalletAddress() ?? '0x0000000000000000000000000000000000000001';
+  log(`Fetching positions for ${posAddress}`);
+  const positions = await rain.getPositions(posAddress as `0x${string}`);
+
+  assert(typeof positions === 'object' && positions !== null, 'getPositions should return an object');
+  assert(positions.address.toLowerCase() === posAddress.toLowerCase(), 'address should match input');
+  assert(Array.isArray(positions.markets), 'markets should be an array');
+  log('Positions', { address: positions.address, marketCount: positions.markets.length });
+
+  for (const pos of positions.markets) {
+    assert(typeof pos.marketId === 'string', 'marketId should be a string');
+    assert(typeof pos.contractAddress === 'string', 'contractAddress should be a string');
+    assert(Array.isArray(pos.options), 'options should be an array');
+    assert(typeof pos.userLiquidity === 'bigint', 'userLiquidity should be bigint');
+    assert(typeof pos.claimed === 'boolean', 'claimed should be boolean');
+    assert(Array.isArray(pos.dynamicPayout), 'dynamicPayout should be an array');
+
+    console.log(`  • "${pos.title}" (${pos.status}): liquidity=${pos.userLiquidity}, claimed=${pos.claimed}`);
+    for (const opt of pos.options) {
+      console.log(`    - Option ${opt.choiceIndex} "${opt.optionName}": shares=${opt.shares}, escrow=${opt.sharesInEscrow}, price=${opt.currentPrice}`);
+    }
+  }
 
   console.log('\n✓ test-read-markets passed');
 }
