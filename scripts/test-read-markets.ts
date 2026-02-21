@@ -66,6 +66,38 @@ async function main() {
     }
   }
 
+  // 5. Fetch position for a single market (getPositionByMarket)
+  log(`Fetching position by market for market: ${firstMarket.id}`);
+  const positionByMarket = await rain.getPositionByMarket(posAddress as `0x${string}`, firstMarket.id);
+
+  assert(typeof positionByMarket === 'object' && positionByMarket !== null, 'getPositionByMarket should return an object');
+  assert(typeof positionByMarket.marketId === 'string', 'marketId should be a string');
+  assert(typeof positionByMarket.title === 'string', 'title should be a string');
+  assert(typeof positionByMarket.status === 'string', 'status should be a string');
+  assert(typeof positionByMarket.contractAddress === 'string', 'contractAddress should be a string');
+  assert(Array.isArray(positionByMarket.options), 'options should be an array');
+  assert(typeof positionByMarket.userLiquidity === 'bigint', 'userLiquidity should be bigint');
+  assert(typeof positionByMarket.claimed === 'boolean', 'claimed should be boolean');
+  assert(Array.isArray(positionByMarket.dynamicPayout), 'dynamicPayout should be an array');
+
+  log('PositionByMarket', {
+    marketId: positionByMarket.marketId,
+    title: positionByMarket.title,
+    status: positionByMarket.status,
+    contractAddress: positionByMarket.contractAddress,
+    userLiquidity: positionByMarket.userLiquidity,
+    claimed: positionByMarket.claimed,
+    optionCount: positionByMarket.options.length,
+  });
+
+  for (const opt of positionByMarket.options) {
+    assert(typeof opt.choiceIndex === 'number', 'choiceIndex should be a number');
+    assert(typeof opt.optionName === 'string', 'optionName should be a string');
+    assert(typeof opt.shares === 'bigint', 'shares should be bigint');
+    assert(typeof opt.currentPrice === 'bigint', 'currentPrice should be bigint');
+    console.log(`  • Option ${opt.choiceIndex} "${opt.optionName}": shares=${opt.shares}, escrow=${opt.sharesInEscrow}, price=${opt.currentPrice}`);
+  }
+
   console.log('\n✓ test-read-markets passed');
 }
 
