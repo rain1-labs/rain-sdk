@@ -57,3 +57,23 @@ export interface TransactionsResult {
 export interface InternalGetTransactionsParams extends GetTransactionsParams {
   // Filled in by Rain class
 }
+
+export interface TransactionDetails {
+  transactionHash: `0x${string}`;
+  blockNumber: bigint;
+  timestamp: bigint;
+  from: `0x${string}`;
+  to: `0x${string}`;
+  status: 'success' | 'failed';
+  gasUsed: bigint;
+  effectiveGasPrice: bigint;
+
+  // Decoded Rain events from subgraph (a single tx can emit multiple events)
+  events: Transaction[];
+}
+
+export interface GetTransactionDetailsParams {
+  transactionHash: `0x${string}`;
+  subgraphUrl: string;
+  rpcUrl: string;
+}

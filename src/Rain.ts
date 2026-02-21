@@ -19,8 +19,9 @@ import { getEOAFromSmartAccount } from './accounts/getEOAFromSmartAccount.js';
 import { PositionByMarket, PositionsResult } from './positions/types.js';
 import { getPositions } from './positions/getPositions.js';
 import { getPositionByMarket } from './positions/getPositionByMarket.js';
-import { GetTransactionsParams, TransactionsResult } from './transactions/types.js';
+import { GetTransactionsParams, GetTransactionDetailsParams, TransactionsResult, TransactionDetails } from './transactions/types.js';
 import { getTransactions } from './transactions/getTransactions.js';
+import { getTransactionDetails } from './transactions/getTransactionDetails.js';
 
 export class Rain {
 
@@ -159,6 +160,20 @@ export class Rain {
       throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
     }
     return getTransactions({ ...params, subgraphUrl });
+  }
+
+  async getTransactionDetails(
+    params: Omit<GetTransactionDetailsParams, 'subgraphUrl' | 'rpcUrl'> & { subgraphUrl?: string; rpcUrl?: string }
+  ): Promise<TransactionDetails> {
+    const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
+    const rpcUrl = params.rpcUrl ?? this.rpcUrl;
+    if (!subgraphUrl) {
+      throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
+    }
+    if (!rpcUrl) {
+      throw new Error('rpcUrl is required — pass it in the Rain constructor config or in the method params');
+    }
+    return getTransactionDetails({ ...params, subgraphUrl, rpcUrl });
   }
 
 }
