@@ -12,8 +12,9 @@ import { buildClaimRawTx } from './tx/ClaimFunds/buildClaimFundsRawTx.js';
 import { AccountBalanceResult } from './accounts/types.js';
 import { getSmartAccountBalance } from './accounts/getSmartAccountBalance.js';
 import { getEOAFromSmartAccount } from './accounts/getEOAFromSmartAccount.js';
-import { PositionsResult } from './positions/types.js';
+import { PositionByMarket, PositionsResult } from './positions/types.js';
 import { getPositions } from './positions/getPositions.js';
+import { getPositionByMarket } from './positions/getPositionByMarket.js';
 
 export class Rain {
 
@@ -90,6 +91,10 @@ export class Rain {
 
   async getPositions(address: `0x${string}`): Promise<PositionsResult> {
     return getPositions({ address, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
+  }
+
+  async getPositionByMarket(address: `0x${string}`, marketId: string): Promise<PositionByMarket> {
+    return getPositionByMarket({ address, marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
   }
 
 }
