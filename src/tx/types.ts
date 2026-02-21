@@ -72,6 +72,15 @@ export interface SellOptionTxParams {
     tokenDecimals?: number;      // defaults to 6 (USDT)
 }
 
+export interface CancelOrdersTxParams {
+    marketContractAddress: `0x${string}`;
+    orders: {
+        option: number;
+        price: number;      // 0 < price < 1 (decimal, converted to 1e18 internally)
+        orderID: bigint;
+    }[];
+}
+
 export interface GetUserOptionSharesParams {
     options: [{ choiceIndex: number, optionName: string }];
     walletAddress: `0x${string}`;
