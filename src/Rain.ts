@@ -1,3 +1,4 @@
+import { PublicClient, WebSocketTransport } from 'viem';
 import { GetMarketsParams, Market, MarketDetails, MarketLiquidity, MarketVolume, OptionPrice } from './markets/types.js';
 import { getMarkets } from './markets/getMarkets.js';
 import { getMarketDetails } from './markets/getMarketDetails.js';
@@ -24,6 +25,8 @@ import { getTransactions } from './transactions/getTransactions.js';
 import { getTransactionDetails } from './transactions/getTransactionDetails.js';
 import { getMarketTransactions } from './transactions/getMarketTransactions.js';
 import { getTradeHistory } from './transactions/getTradeHistory.js';
+import { createWsClient, subscribeToMarketEvents } from './utils/websocket.js';
+import { SubscribeMarketEventsParams, Unsubscribe } from './websocket/types.js';
 
 export class Rain {
 
@@ -33,9 +36,12 @@ export class Rain {
   private readonly distute_initial_timer: number;
   private readonly rpcUrl?: string;
   private readonly subgraphUrl?: string;
+  private readonly wsRpcUrl?: string;
+  private readonly wsReconnect?: boolean | { attempts?: number; delay?: number };
+  private wsClient: PublicClient<WebSocketTransport> | null = null;
 
   constructor(config: RainCoreConfig = {}) {
-    const { environment = "development", rpcUrl, apiUrl, subgraphUrl } = config;
+    const { environment = "development", rpcUrl, apiUrl, subgraphUrl, wsRpcUrl, wsReconnect } = config;
 
     function isValidEnvironment(env: string): env is RainEnvironment {
       return ALLOWED_ENVIRONMENTS.includes(env as RainEnvironment);
@@ -53,6 +59,8 @@ export class Rain {
     this.apiUrl = apiUrl ?? envConfig.apiUrl;
     this.distute_initial_timer = envConfig.dispute_initial_timer;
     this.subgraphUrl = subgraphUrl;
+    this.wsRpcUrl = wsRpcUrl;
+    this.wsReconnect = wsReconnect;
   }
 
   async getPublicMarkets(params: GetMarketsParams): Promise<Market[]> {
@@ -196,6 +204,42 @@ export class Rain {
       throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
     }
     return getTradeHistory({ ...params, subgraphUrl });
+  }
+
+  private getWsClient(): PublicClient<WebSocketTransport> {
+    if (this.wsClient) {
+      return this.wsClient;
+    }
+    if (!this.wsRpcUrl) {
+      throw new Error(
+        'wsRpcUrl is required for WebSocket subscriptions — pass it in the Rain constructor config'
+      );
+    }
+    this.wsClient = createWsClient({
+      wsRpcUrl: this.wsRpcUrl,
+      reconnect: this.wsReconnect,
+    });
+    return this.wsClient;
+  }
+
+  subscribeToMarketEvents(params: SubscribeMarketEventsParams): Unsubscribe {
+    const client = this.getWsClient();
+    return subscribeToMarketEvents(client, params);
+  }
+
+  async destroyWebSocket(): Promise<void> {
+    if (this.wsClient) {
+      const transport = this.wsClient.transport;
+      if ('getSocket' in transport && typeof transport.getSocket === 'function') {
+        try {
+          const socket = await (transport.getSocket as () => Promise<WebSocket>)();
+          socket.close();
+        } catch {
+          // Socket may already be closed
+        }
+      }
+      this.wsClient = null;
+    }
   }
 
 }
