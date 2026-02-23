@@ -350,6 +350,94 @@ rain.buildClaimTx({
 
 ---
 
+## subscribeToMarketEvents
+
+Subscribes to live on-chain events for a specific market via WebSocket. Returns an `Unsubscribe` function to stop listening.
+
+Requires `wsRpcUrl` in the `Rain` constructor config.
+
+### Method Signature
+
+```ts
+subscribeToMarketEvents(params: SubscribeMarketEventsParams): Unsubscribe;
+```
+
+### Parameters
+
+```ts
+interface SubscribeMarketEventsParams {
+  marketAddress: `0x${string}`;
+  eventNames?: MarketEventName[];       // Optional filter — omit for all events
+  onEvent: (event: MarketTradeEvent) => void;
+  onError?: (error: Error) => void;
+}
+```
+
+### Event Types
+
+Each market is a diamond proxy with a Uniswap v2-style AMM per option. Events fall into three categories:
+
+#### Trade events
+| Event | Description |
+|---|---|
+| `EnterOption` | AMM buy — user swaps base tokens for option shares at the current AMM price. |
+| `PlaceBuyOrder` | Limit buy placed — order sits in the order book until the price is reached. |
+| `PlaceSellOrder` | Limit sell placed — user lists option shares for sale at a target price. |
+| `ExecuteBuyOrder` | Limit buy filled — a previously placed buy order was matched and executed. |
+| `ExecuteSellOrder` | Limit sell filled — a previously placed sell order was matched and executed. |
+| `CancelBuyOrder` | User cancelled an open limit buy order. |
+| `CancelSellOrder` | User cancelled an open limit sell order. |
+
+#### Price sync events
+| Event | Description |
+|---|---|
+| `Sync` | AMM reserve rebalance after any trade. Emitted **once per option pair** in the market. A market with 3 options emits 3 `Sync` events per trade, each containing the updated `optionVotes` (reserves for that option) and `allVotes` (total reserves across all options). The ratio `optionVotes / allVotes` gives the implied probability (price) of that option. |
+
+#### Lifecycle events
+| Event | Description |
+|---|---|
+| `Claim` | User claimed their winnings from a resolved market. |
+| `ChooseWinner` | Market resolved — the winning option was selected. |
+| `ClosePool` | Market closed — no further trading allowed. |
+
+### Example
+
+```ts
+const rain = new Rain({
+  environment: 'development',
+  wsRpcUrl: 'wss://arbitrum-one-rpc.publicnode.com',
+});
+
+const unsubscribe = rain.subscribeToMarketEvents({
+  marketAddress: '0xd262abd3d58038e15736Ec32c4F7b020C2B21dB5',
+  eventNames: ['EnterOption', 'Sync'],  // optional filter
+  onEvent: (event) => {
+    console.log(event.eventName, event.args);
+    // EnterOption { wallet, option, baseAmount, optionAmount }
+    // Sync       { pair, optionVotes, allVotes }
+  },
+  onError: (err) => console.error(err),
+});
+
+// Later: stop listening
+unsubscribe();
+```
+
+### Callback Payload
+
+```ts
+interface MarketTradeEvent {
+  eventName: MarketEventName;
+  marketAddress: `0x${string}`;
+  blockNumber: bigint;
+  transactionHash: `0x${string}`;
+  logIndex: number;
+  args: Record<string, unknown>;
+}
+```
+
+---
+
 ## RainAA Class (Account Abstraction)
 
 `RainAA` is responsible for:
