@@ -16,5 +16,5 @@ export async function getMarkets(
     }
 
     const data = await res.json();
-    return data;
+    return data.data.pools;
 }
