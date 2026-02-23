@@ -7,8 +7,12 @@ import {
   MarketEventName,
   MarketTradeEvent,
   SubscribeMarketEventsParams,
+  SubscribePriceUpdatesParams,
+  PriceAffectingEventName,
   Unsubscribe,
 } from '../websocket/types.js';
+import { multicallRead, type MulticallResult } from './multicall.js';
+import type { OptionPrice } from '../markets/types.js';
 
 const DEFAULT_RECONNECT: WebSocketReconnectConfig = {
   attempts: 20,
@@ -99,4 +103,91 @@ export function subscribeToMarketEvents(
   });
 
   return unwatch;
+}
+
+const PRICE_AFFECTING_EVENTS: PriceAffectingEventName[] = [
+  'EnterOption',
+  'ExecuteBuyOrder',
+  'ExecuteSellOrder',
+  'Sync',
+];
+
+export function subscribePriceUpdates(
+  client: PublicClient<WebSocketTransport>,
+  rpcUrl: string,
+  params: SubscribePriceUpdatesParams,
+): Unsubscribe {
+  const { marketAddress, onPriceUpdate, onError } = params;
+
+  let cachedNumOptions: number | null = null;
+  let lastFetchedBlock: bigint = 0n;
+  let fetchInProgress = false;
+
+  async function fetchPrices(triggerEvent: MarketTradeEvent): Promise<void> {
+    // Debounce: skip if we already fetched for this block
+    if (triggerEvent.blockNumber <= lastFetchedBlock) return;
+    // Skip if a fetch is already running
+    if (fetchInProgress) return;
+
+    fetchInProgress = true;
+    try {
+      // On first call, read numberOfOptions alongside prices
+      if (cachedNumOptions === null) {
+        const numResult: readonly MulticallResult[] = await multicallRead(rpcUrl, [{
+          address: marketAddress,
+          abi: TradePoolAbi,
+          functionName: 'numberOfOptions',
+          args: [],
+        }]);
+        if (numResult[0]?.status !== 'success') {
+          throw new Error('Failed to read numberOfOptions from contract');
+        }
+        cachedNumOptions = Number(numResult[0].result as bigint);
+      }
+
+      const numOptions = cachedNumOptions;
+      if (numOptions === 0) {
+        lastFetchedBlock = triggerEvent.blockNumber;
+        onPriceUpdate({ prices: [], triggeredBy: triggerEvent });
+        return;
+      }
+
+      // Multicall getCurrentPrice for each option
+      const priceContracts = Array.from({ length: numOptions }, (_, i) => ({
+        address: marketAddress,
+        abi: TradePoolAbi,
+        functionName: 'getCurrentPrice',
+        args: [BigInt(i)],
+      }));
+
+      const priceResults: readonly MulticallResult[] = await multicallRead(rpcUrl, priceContracts);
+
+      const prices: OptionPrice[] = Array.from({ length: numOptions }, (_, i) => {
+        const result = priceResults[i];
+        return {
+          choiceIndex: i,
+          optionName: `Option ${i}`,
+          currentPrice: result?.status === 'success' ? BigInt(result.result as any) : 0n,
+        };
+      });
+
+      lastFetchedBlock = triggerEvent.blockNumber;
+      onPriceUpdate({ prices, triggeredBy: triggerEvent });
+    } catch (err) {
+      if (onError) {
+        onError(err instanceof Error ? err : new Error(String(err)));
+      }
+    } finally {
+      fetchInProgress = false;
+    }
+  }
+
+  return subscribeToMarketEvents(client, {
+    marketAddress,
+    eventNames: PRICE_AFFECTING_EVENTS as MarketEventName[],
+    onEvent: (event) => {
+      fetchPrices(event);
+    },
+    onError,
+  });
 }

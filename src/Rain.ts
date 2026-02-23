@@ -25,8 +25,8 @@ import { getTransactions } from './transactions/getTransactions.js';
 import { getTransactionDetails } from './transactions/getTransactionDetails.js';
 import { getMarketTransactions } from './transactions/getMarketTransactions.js';
 import { getTradeHistory } from './transactions/getTradeHistory.js';
-import { createWsClient, subscribeToMarketEvents } from './utils/websocket.js';
-import { SubscribeMarketEventsParams, Unsubscribe } from './websocket/types.js';
+import { createWsClient, subscribeToMarketEvents, subscribePriceUpdates } from './utils/websocket.js';
+import { SubscribeMarketEventsParams, SubscribePriceUpdatesParams, Unsubscribe } from './websocket/types.js';
 
 export class Rain {
 
@@ -225,6 +225,11 @@ export class Rain {
   subscribeToMarketEvents(params: SubscribeMarketEventsParams): Unsubscribe {
     const client = this.getWsClient();
     return subscribeToMarketEvents(client, params);
+  }
+
+  subscribePriceUpdates(params: SubscribePriceUpdatesParams): Unsubscribe {
+    const client = this.getWsClient();
+    return subscribePriceUpdates(client, this.rpcUrl!, params);
   }
 
   async destroyWebSocket(): Promise<void> {

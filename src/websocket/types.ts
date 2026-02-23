@@ -43,3 +43,14 @@ export interface SubscribeMarketEventsParams {
   onEvent: (event: MarketTradeEvent) => void;
   onError?: (error: Error) => void;
 }
+
+export interface PriceUpdate {
+  prices: import('../markets/types.js').OptionPrice[];
+  triggeredBy: MarketTradeEvent;
+}
+
+export interface SubscribePriceUpdatesParams {
+  marketAddress: `0x${string}`;
+  onPriceUpdate: (update: PriceUpdate) => void;
+  onError?: (error: Error) => void;
+}
