@@ -58,7 +58,7 @@ export class Rain {
     this.marketFactory = envConfig.market_factory_address
     this.apiUrl = apiUrl ?? envConfig.apiUrl;
     this.distute_initial_timer = envConfig.dispute_initial_timer;
-    this.subgraphUrl = subgraphUrl;
+    this.subgraphUrl = subgraphUrl ?? envConfig.subgraphUrl;
     this.wsRpcUrl = wsRpcUrl;
     this.wsReconnect = wsReconnect;
   }
