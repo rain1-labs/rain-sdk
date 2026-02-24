@@ -10,6 +10,7 @@ export interface GetMarketsParams {
     offset?: number;
     sortBy?: MarketSortBy;
     status?: MarketStatus;
+    creator?: string;
     apiUrl?: string;
 }
 
@@ -18,7 +19,8 @@ export interface Market {
     title: string;
     totalVolume: string;
     status: MarketStatus;
-    // add more fields as your API returns
+    poolOwnerWalletAddress?: string;
+    contractAddress?: string;
 }
 
 export interface MarketOption {

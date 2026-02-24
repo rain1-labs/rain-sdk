@@ -16,5 +16,12 @@ export async function getMarkets(
     }
 
     const data = await res.json();
-    return data.data.pools;
+    let pools: Market[] = data.data.pools;
+    if (params?.creator) {
+        const creatorLower = params.creator.toLowerCase();
+        pools = pools.filter((p: any) =>
+            p.poolOwnerWalletAddress?.toLowerCase() === creatorLower
+        );
+    }
+    return pools;
 }

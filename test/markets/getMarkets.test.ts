@@ -17,7 +17,7 @@ describe('getMarkets', () => {
   it('calls fetch with correct base URL', async () => {
     vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([]),
+      json: () => Promise.resolve({ data: { pools: [] } }),
     } as any);
 
     await getMarkets({ apiUrl: 'https://dev-api.rain.one' });
@@ -29,7 +29,7 @@ describe('getMarkets', () => {
   it('appends limit query param', async () => {
     vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([]),
+      json: () => Promise.resolve({ data: { pools: [] } }),
     } as any);
 
     await getMarkets({ apiUrl: 'https://dev-api.rain.one', limit: 10 });
@@ -41,7 +41,7 @@ describe('getMarkets', () => {
   it('appends offset query param', async () => {
     vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([]),
+      json: () => Promise.resolve({ data: { pools: [] } }),
     } as any);
 
     await getMarkets({ apiUrl: 'https://dev-api.rain.one', offset: 5 });
@@ -53,7 +53,7 @@ describe('getMarkets', () => {
   it('maps sortBy to backend field name', async () => {
     vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([]),
+      json: () => Promise.resolve({ data: { pools: [] } }),
     } as any);
 
     await getMarkets({ apiUrl: 'https://dev-api.rain.one', sortBy: 'Liquidity' });
@@ -65,7 +65,7 @@ describe('getMarkets', () => {
   it('maps status to backend field name', async () => {
     vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([]),
+      json: () => Promise.resolve({ data: { pools: [] } }),
     } as any);
 
     await getMarkets({ apiUrl: 'https://dev-api.rain.one', status: 'Closed' });
@@ -74,10 +74,31 @@ describe('getMarkets', () => {
     expect(calledUrl).toContain('status=Closed');
   });
 
+  it('filters results by creator address client-side', async () => {
+    const mockPools = [
+      { id: '1', title: 'Pool A', poolOwnerWalletAddress: '0xABC123' },
+      { id: '2', title: 'Pool B', poolOwnerWalletAddress: '0xDEF456' },
+      { id: '3', title: 'Pool C', poolOwnerWalletAddress: '0xabc123' },
+    ];
+    vi.mocked(globalThis.fetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: { pools: mockPools } }),
+    } as any);
+
+    const result = await getMarkets({ apiUrl: 'https://dev-api.rain.one', creator: '0xABC123' });
+
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe('1');
+    expect(result[1].id).toBe('3');
+    // creator should NOT be sent as a query param
+    const calledUrl = vi.mocked(globalThis.fetch).mock.calls[0][0] as string;
+    expect(calledUrl).not.toContain('creator=');
+  });
+
   it('does not include undefined params in query', async () => {
     vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([]),
+      json: () => Promise.resolve({ data: { pools: [] } }),
     } as any);
 
     await getMarkets({ apiUrl: 'https://dev-api.rain.one' });
@@ -95,7 +116,7 @@ describe('getMarkets', () => {
     ];
     vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockMarkets),
+      json: () => Promise.resolve({ data: { pools: mockMarkets } }),
     } as any);
 
     const result = await getMarkets({ apiUrl: 'https://dev-api.rain.one' });
