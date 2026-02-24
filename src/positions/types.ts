@@ -46,3 +46,26 @@ export interface PositionByMarket {
   claimed: boolean;
   dynamicPayout: bigint[];
 }
+
+export interface GetPortfolioValueParams {
+  address: `0x${string}`;
+  tokenAddresses: `0x${string}`[];
+  apiUrl: string;
+  rpcUrl: string;
+}
+
+export interface MarketPositionValue {
+  marketId: string;
+  title: string;
+  status: string;
+  contractAddress: `0x${string}`;
+  dynamicPayout: bigint[];
+  totalPositionValue: bigint;
+}
+
+export interface PortfolioValue {
+  address: `0x${string}`;
+  tokenBalances: import('../accounts/types.js').TokenBalance[];
+  positions: MarketPositionValue[];
+  totalPositionValue: bigint;
+}
