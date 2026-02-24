@@ -438,6 +438,84 @@ interface MarketTradeEvent {
 
 ---
 
+## getPortfolioValue
+
+Returns a user's combined portfolio: token balances + current value of all open positions across all markets. Internally calls `getPositions()` and `getSmartAccountBalance()` in parallel, then aggregates the results.
+
+### Method Signature
+
+```ts
+getPortfolioValue(params: {
+  address: `0x${string}`;
+  tokenAddresses: `0x${string}`[];
+}): Promise<PortfolioValue>;
+```
+
+### Parameters
+
+| Parameter        | Type              | Required | Description                                                     |
+| ---------------- | ----------------- | -------- | --------------------------------------------------------------- |
+| `address`        | `0x${string}`     | ✅        | Wallet address to query (EOA or smart account)                  |
+| `tokenAddresses` | `0x${string}`[]   | ✅        | ERC20 token addresses to check balances for (e.g. USDT on Arb) |
+
+### Return Type
+
+```ts
+interface PortfolioValue {
+  address: `0x${string}`;
+  tokenBalances: TokenBalance[];        // per-token balance from getSmartAccountBalance
+  positions: MarketPositionValue[];     // per-market position values
+  totalPositionValue: bigint;           // sum across all markets (base token units)
+}
+
+interface MarketPositionValue {
+  marketId: string;
+  title: string;
+  status: string;
+  contractAddress: `0x${string}`;
+  dynamicPayout: bigint[];       // per-option payout in base token units
+  totalPositionValue: bigint;    // sum of dynamicPayout entries for this market
+}
+```
+
+### Understanding `dynamicPayout`
+
+`dynamicPayout` is an array with one entry per market option, returned by the on-chain `getDynamicPayout(address)` call. Each entry represents how much the user would receive (in base token units) **if that option wins**.
+
+For example, `[0, 804164316, 0, 0]` on a USDT market (6 decimals) means:
+- Option 0: 0 USDT payout
+- Option 1: ~804.16 USDT payout if it wins
+- Option 2: 0 USDT payout
+- Option 3: 0 USDT payout
+
+`totalPositionValue` is the sum of all `dynamicPayout` entries. When a user holds shares in only one option, this equals the potential payout. When holding shares in multiple options, the sum overstates the actual value since only one option can win — the caller should interpret accordingly.
+
+### Token balance note
+
+Token balances are reported individually because different tokens (USDT, ETH, etc.) have different decimals and no on-chain price oracle is used. The SDK does not attempt to sum balances across tokens — the caller is responsible for cross-token aggregation if needed.
+
+### Example
+
+```ts
+const rain = new Rain({ environment: 'development' });
+
+const portfolio = await rain.getPortfolioValue({
+  address: '0x996ea23940f4a01610181D04bdB6F862719b63f0',
+  tokenAddresses: ['0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'], // USDT on Arbitrum
+});
+
+console.log('Total position value:', portfolio.totalPositionValue);
+console.log('Token balances:', portfolio.tokenBalances);
+console.log('Markets with positions:', portfolio.positions.length);
+
+for (const pos of portfolio.positions) {
+  console.log(`${pos.title} — value: ${pos.totalPositionValue}`);
+  console.log(`  Payout per option: [${pos.dynamicPayout.join(', ')}]`);
+}
+```
+
+---
+
 ## RainAA Class (Account Abstraction)
 
 `RainAA` is responsible for:
