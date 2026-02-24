@@ -46,6 +46,7 @@ export interface GetTransactionsParams {
   skip?: number;
   orderDirection?: 'asc' | 'desc';
   subgraphUrl: string;
+  subgraphApiKey?: string;
 }
 
 export interface TransactionsResult {
@@ -75,6 +76,7 @@ export interface TransactionDetails {
 export interface GetTransactionDetailsParams {
   transactionHash: `0x${string}`;
   subgraphUrl: string;
+  subgraphApiKey?: string;
   rpcUrl: string;
 }
 
@@ -87,6 +89,7 @@ export interface GetMarketTransactionsParams {
   skip?: number;
   orderDirection?: 'asc' | 'desc';
   subgraphUrl: string;
+  subgraphApiKey?: string;
 }
 
 export interface MarketTransactionsResult {
@@ -105,6 +108,7 @@ export interface GetTradeHistoryParams {
   skip?: number;
   orderDirection?: 'asc' | 'desc';
   subgraphUrl: string;
+  subgraphApiKey?: string;
 }
 
 export interface TradeHistoryResult {

@@ -62,14 +62,14 @@ async function fetchBlockTimestamp(rpcUrl: string, blockNumber: string): Promise
 export async function getTransactionDetails(
   params: GetTransactionDetailsParams,
 ): Promise<TransactionDetails> {
-  const { transactionHash, subgraphUrl, rpcUrl } = params;
+  const { transactionHash, subgraphUrl, subgraphApiKey, rpcUrl } = params;
 
   const query = buildSubgraphQuery(transactionHash);
 
   // Fetch on-chain receipt and subgraph events in parallel
   const [receipt, subgraphData] = await Promise.all([
     fetchReceipt(rpcUrl, transactionHash),
-    subgraphQuery<Record<string, any[]>>(subgraphUrl, query),
+    subgraphQuery<Record<string, any[]>>(subgraphUrl, query, subgraphApiKey),
   ]);
 
   // Fetch block timestamp using the block number from the receipt

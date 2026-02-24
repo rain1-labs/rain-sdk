@@ -39,12 +39,13 @@ export class Rain {
   private readonly distute_initial_timer: number;
   private readonly rpcUrl?: string;
   private readonly subgraphUrl?: string;
+  private readonly subgraphApiKey?: string;
   private readonly wsRpcUrl?: string;
   private readonly wsReconnect?: boolean | { attempts?: number; delay?: number };
   private wsClient: PublicClient<WebSocketTransport> | null = null;
 
   constructor(config: RainCoreConfig = {}) {
-    const { environment = "development", rpcUrl, apiUrl, subgraphUrl, wsRpcUrl, wsReconnect } = config;
+    const { environment = "development", rpcUrl, apiUrl, subgraphUrl, subgraphApiKey, wsRpcUrl, wsReconnect } = config;
 
     function isValidEnvironment(env: string): env is RainEnvironment {
       return ALLOWED_ENVIRONMENTS.includes(env as RainEnvironment);
@@ -62,6 +63,7 @@ export class Rain {
     this.apiUrl = apiUrl ?? envConfig.apiUrl;
     this.distute_initial_timer = envConfig.dispute_initial_timer;
     this.subgraphUrl = subgraphUrl ?? envConfig.subgraphUrl;
+    this.subgraphApiKey = subgraphApiKey;
     this.wsRpcUrl = wsRpcUrl;
     this.wsReconnect = wsReconnect;
   }
@@ -178,16 +180,16 @@ export class Rain {
     });
   }
 
-  async getTransactions(params: Omit<GetTransactionsParams, 'subgraphUrl'> & { subgraphUrl?: string }): Promise<TransactionsResult> {
+  async getTransactions(params: Omit<GetTransactionsParams, 'subgraphUrl' | 'subgraphApiKey'> & { subgraphUrl?: string; subgraphApiKey?: string }): Promise<TransactionsResult> {
     const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
     if (!subgraphUrl) {
       throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
     }
-    return getTransactions({ ...params, subgraphUrl });
+    return getTransactions({ ...params, subgraphUrl, subgraphApiKey: params.subgraphApiKey ?? this.subgraphApiKey });
   }
 
   async getTransactionDetails(
-    params: Omit<GetTransactionDetailsParams, 'subgraphUrl' | 'rpcUrl'> & { subgraphUrl?: string; rpcUrl?: string }
+    params: Omit<GetTransactionDetailsParams, 'subgraphUrl' | 'subgraphApiKey' | 'rpcUrl'> & { subgraphUrl?: string; subgraphApiKey?: string; rpcUrl?: string }
   ): Promise<TransactionDetails> {
     const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
     const rpcUrl = params.rpcUrl ?? this.rpcUrl;
@@ -197,37 +199,37 @@ export class Rain {
     if (!rpcUrl) {
       throw new Error('rpcUrl is required — pass it in the Rain constructor config or in the method params');
     }
-    return getTransactionDetails({ ...params, subgraphUrl, rpcUrl });
+    return getTransactionDetails({ ...params, subgraphUrl, subgraphApiKey: params.subgraphApiKey ?? this.subgraphApiKey, rpcUrl });
   }
 
   async getMarketTransactions(
-    params: Omit<GetMarketTransactionsParams, 'subgraphUrl'> & { subgraphUrl?: string }
+    params: Omit<GetMarketTransactionsParams, 'subgraphUrl' | 'subgraphApiKey'> & { subgraphUrl?: string; subgraphApiKey?: string }
   ): Promise<MarketTransactionsResult> {
     const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
     if (!subgraphUrl) {
       throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
     }
-    return getMarketTransactions({ ...params, subgraphUrl });
+    return getMarketTransactions({ ...params, subgraphUrl, subgraphApiKey: params.subgraphApiKey ?? this.subgraphApiKey });
   }
 
   async getPriceHistory(
-    params: Omit<GetPriceHistoryParams, 'subgraphUrl' | 'apiUrl'> & { subgraphUrl?: string; apiUrl?: string }
+    params: Omit<GetPriceHistoryParams, 'subgraphUrl' | 'subgraphApiKey' | 'apiUrl'> & { subgraphUrl?: string; subgraphApiKey?: string; apiUrl?: string }
   ): Promise<PriceHistoryResult> {
     const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
     if (!subgraphUrl) {
       throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
     }
-    return getPriceHistory({ ...params, subgraphUrl, apiUrl: params.apiUrl ?? this.apiUrl });
+    return getPriceHistory({ ...params, subgraphUrl, subgraphApiKey: params.subgraphApiKey ?? this.subgraphApiKey, apiUrl: params.apiUrl ?? this.apiUrl });
   }
 
   async getTradeHistory(
-    params: Omit<GetTradeHistoryParams, 'subgraphUrl'> & { subgraphUrl?: string }
+    params: Omit<GetTradeHistoryParams, 'subgraphUrl' | 'subgraphApiKey'> & { subgraphUrl?: string; subgraphApiKey?: string }
   ): Promise<TradeHistoryResult> {
     const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
     if (!subgraphUrl) {
       throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
     }
-    return getTradeHistory({ ...params, subgraphUrl });
+    return getTradeHistory({ ...params, subgraphUrl, subgraphApiKey: params.subgraphApiKey ?? this.subgraphApiKey });
   }
 
   private getWsClient(): PublicClient<WebSocketTransport> {

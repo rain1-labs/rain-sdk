@@ -33,5 +33,6 @@ export interface GetPriceHistoryParams {
   to?: bigint;            // End timestamp filter
   limit?: number;         // Max candles (default 200)
   subgraphUrl: string;
+  subgraphApiKey?: string;
   apiUrl: string;
 }

@@ -73,6 +73,7 @@ export async function getTransactions(params: GetTransactionsParams): Promise<Tr
     skip = 0,
     orderDirection = 'desc',
     subgraphUrl,
+    subgraphApiKey,
   } = params;
 
   const enabledEntities = getEnabledEntities(types);
@@ -90,7 +91,7 @@ export async function getTransactions(params: GetTransactionsParams): Promise<Tr
     enabledEntities,
   });
 
-  const data = await subgraphQuery<Record<string, any[]>>(subgraphUrl, query);
+  const data = await subgraphQuery<Record<string, any[]>>(subgraphUrl, query, subgraphApiKey);
 
   // Parse all results into unified Transaction objects
   const allTransactions: Transaction[] = [];

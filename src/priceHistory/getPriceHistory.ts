@@ -202,6 +202,7 @@ export async function getPriceHistory(
     to,
     limit = 200,
     subgraphUrl,
+    subgraphApiKey,
     apiUrl,
   } = params;
 
@@ -233,7 +234,7 @@ export async function getPriceHistory(
 
   // 2. Query subgraph for trade events
   const query = buildQuery(contractAddress, optionIndex, from, to);
-  const data = await subgraphQuery<SubgraphResponse>(subgraphUrl, query);
+  const data = await subgraphQuery<SubgraphResponse>(subgraphUrl, query, subgraphApiKey);
 
   // 3. Extract price points
   const points = extractPricePoints(data, optionIndex);

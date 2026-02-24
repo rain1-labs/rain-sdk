@@ -56,6 +56,7 @@ export async function getMarketTransactions(params: GetMarketTransactionsParams)
     skip = 0,
     orderDirection = 'desc',
     subgraphUrl,
+    subgraphApiKey,
   } = params;
 
   const enabledEntities = getEnabledEntities(types);
@@ -70,7 +71,7 @@ export async function getMarketTransactions(params: GetMarketTransactionsParams)
     enabledEntities,
   });
 
-  const data = await subgraphQuery<Record<string, any[]>>(subgraphUrl, query);
+  const data = await subgraphQuery<Record<string, any[]>>(subgraphUrl, query, subgraphApiKey);
 
   const allTransactions: Transaction[] = [];
   const seenIds = new Set<string>();

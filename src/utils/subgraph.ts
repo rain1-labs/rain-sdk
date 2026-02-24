@@ -1,10 +1,16 @@
 export async function subgraphQuery<T = any>(
   subgraphUrl: string,
   query: string,
+  apiKey?: string,
 ): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`;
+  }
+
   const res = await fetch(subgraphUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ query }),
   });
 

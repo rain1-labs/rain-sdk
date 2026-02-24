@@ -15,6 +15,7 @@ export interface RainCoreConfig {
   rpcUrl?: string;
   apiUrl?: string;
   subgraphUrl?: string;
+  subgraphApiKey?: string;
   wsRpcUrl?: string;
   wsReconnect?: boolean | { attempts?: number; delay?: number };
 }
