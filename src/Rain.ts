@@ -28,6 +28,8 @@ import { getMarketTransactions } from './transactions/getMarketTransactions.js';
 import { getTradeHistory } from './transactions/getTradeHistory.js';
 import { createWsClient, subscribeToMarketEvents, subscribePriceUpdates } from './utils/websocket.js';
 import { SubscribeMarketEventsParams, SubscribePriceUpdatesParams, Unsubscribe } from './websocket/types.js';
+import { GetPriceHistoryParams, PriceHistoryResult } from './priceHistory/types.js';
+import { getPriceHistory } from './priceHistory/getPriceHistory.js';
 
 export class Rain {
 
@@ -206,6 +208,16 @@ export class Rain {
       throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
     }
     return getMarketTransactions({ ...params, subgraphUrl });
+  }
+
+  async getPriceHistory(
+    params: Omit<GetPriceHistoryParams, 'subgraphUrl' | 'apiUrl'> & { subgraphUrl?: string; apiUrl?: string }
+  ): Promise<PriceHistoryResult> {
+    const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
+    if (!subgraphUrl) {
+      throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
+    }
+    return getPriceHistory({ ...params, subgraphUrl, apiUrl: params.apiUrl ?? this.apiUrl });
   }
 
   async getTradeHistory(

@@ -9,3 +9,4 @@ export type { PositionsResult, MarketPosition, OptionPosition, GetPositionsParam
 export type { DepositToSmartAccountTxParams, WithdrawFromSmartAccountTxParams, SellOptionTxParams, CancelOrdersTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, RawTransaction } from './tx/types.js';
 export type { Transaction, TransactionType, GetTransactionsParams, TransactionsResult, TransactionDetails, GetTransactionDetailsParams, GetMarketTransactionsParams, MarketTransactionsResult, GetTradeHistoryParams, TradeHistoryResult } from './transactions/types.js';
 export type { Unsubscribe, WebSocketConfig, WebSocketReconnectConfig, MarketTradeEventName, PriceAffectingEventName, MarketEventName, MarketTradeEvent, SubscribeMarketEventsParams, PriceUpdate, SubscribePriceUpdatesParams } from './websocket/types.js';
+export type { PriceHistoryInterval, PriceCandle, PriceHistoryResult, GetPriceHistoryParams } from './priceHistory/types.js';
