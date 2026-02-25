@@ -1,5 +1,6 @@
-import { getMarkets } from './getMarkets.js';
 import type { GetMarketIdParams } from './types.js';
+
+const PAGE_LIMIT = 200;
 
 export async function getMarketId(
   params: GetMarketIdParams
@@ -10,25 +11,47 @@ export async function getMarketId(
   if (!marketAddress) throw new Error('marketAddress is required');
 
   const addressLower = marketAddress.toLowerCase();
-  const limit = 50;
   let offset = 0;
 
   while (true) {
-    const markets = await getMarkets({ limit, offset, apiUrl });
+    const res = await fetch(`${apiUrl}/pools/public-pools?limit=${PAGE_LIMIT}&offset=${offset}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch markets: ${res.status}`);
+    }
 
-    const match = markets.find(
-      (m) => m.contractAddress?.toLowerCase() === addressLower
+    const batch = await res.json();
+
+    // API may return: plain array, { data: [...] }, or { data: { pools: [...] } }
+    let items: any[];
+    if (Array.isArray(batch)) {
+      items = batch;
+    } else if (batch && typeof batch === 'object') {
+      if (Array.isArray(batch.data)) {
+        items = batch.data;
+      } else if (Array.isArray(batch.data?.pools)) {
+        items = batch.data.pools;
+      } else if (Array.isArray(batch.pools)) {
+        items = batch.pools;
+      } else {
+        items = [];
+      }
+    } else {
+      items = [];
+    }
+
+    const match = items.find(
+      (m: any) => m.contractAddress?.toLowerCase() === addressLower
     );
 
     if (match) {
-      return match.id;
+      return match.id ?? match._id;
     }
 
-    if (markets.length < limit) {
+    if (items.length < PAGE_LIMIT) {
       break;
     }
 
-    offset += limit;
+    offset += PAGE_LIMIT;
   }
 
   throw new Error(`No market found with address ${marketAddress}`);
