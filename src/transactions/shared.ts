@@ -8,7 +8,7 @@ export const ENTITY_FIELDS = {
   executeSellOrders: 'id poolAddress orderOption orderPrice optionAmount baseAmount orderID maker taker blockNumber blockTimestamp transactionHash',
   cancelBuyOrders: 'id poolAddress orderOption orderAmount orderPrice orderID orderCreator blockNumber blockTimestamp transactionHash',
   cancelSellOrders: 'id poolAddress orderOption orderAmount orderPrice orderID orderCreator blockNumber blockTimestamp transactionHash',
-  enterLiquiditys: 'id poolAddress baseAmount wallet blockNumber blockTimestamp transactionHash',
+  enterLiquidities: 'id poolAddress baseAmount wallet blockNumber blockTimestamp transactionHash',
   claims: 'id poolAddress wallet winnerOption liquidityReward reward totalReward blockNumber blockTimestamp transactionHash',
 } as const;
 
@@ -20,7 +20,7 @@ export const ENTITY_CONFIG: Record<string, { addressField: string; type: Transac
   executeSellOrders: { addressField: 'maker', type: 'limit_sell_filled' },
   cancelBuyOrders: { addressField: 'orderCreator', type: 'cancel_buy' },
   cancelSellOrders: { addressField: 'orderCreator', type: 'cancel_sell' },
-  enterLiquiditys: { addressField: 'wallet', type: 'add_liquidity' },
+  enterLiquidities: { addressField: 'wallet', type: 'add_liquidity' },
   claims: { addressField: 'wallet', type: 'claim' },
 };
 
