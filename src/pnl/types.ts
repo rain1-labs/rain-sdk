@@ -19,6 +19,14 @@ export interface OptionPnL {
   costBasis: bigint;
   realizedPnL: bigint;
   unrealizedPnL: bigint;
+  formatted: {
+    buyCost: string;
+    sellProceeds: string;
+    currentValue: string;
+    costBasis: string;
+    realizedPnL: string;
+    unrealizedPnL: string;
+  };
 }
 
 export interface MarketPnL {
@@ -26,6 +34,7 @@ export interface MarketPnL {
   title: string;
   status: string;
   contractAddress: `0x${string}`;
+  baseTokenDecimals: number;
   options: OptionPnL[];
   claimed: boolean;
   claimReward: bigint;
@@ -36,6 +45,16 @@ export interface MarketPnL {
   realizedPnL: bigint;
   unrealizedPnL: bigint;
   totalPnL: bigint;
+  formatted: {
+    claimReward: string;
+    liquidityCost: string;
+    liquidityReward: string;
+    totalCostBasis: string;
+    totalCurrentValue: string;
+    realizedPnL: string;
+    unrealizedPnL: string;
+    totalPnL: string;
+  };
 }
 
 export interface PnLResult {
@@ -44,4 +63,9 @@ export interface PnLResult {
   totalRealizedPnL: bigint;
   totalUnrealizedPnL: bigint;
   totalPnL: bigint;
+  formatted: {
+    totalRealizedPnL: string;
+    totalUnrealizedPnL: string;
+    totalPnL: string;
+  };
 }

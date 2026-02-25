@@ -1,7 +1,10 @@
+import { formatUnits } from 'viem';
 import { getPositions } from '../positions/getPositions.js';
 import { getPositionByMarket } from '../positions/getPositionByMarket.js';
 import { getMarketId } from '../markets/getMarketId.js';
 import { getTransactions } from '../transactions/getTransactions.js';
+import { multicallRead } from '../utils/multicall.js';
+import { TradePoolAbi } from '../abi/TradeMarketsAbi.js';
 import type { Transaction } from '../transactions/types.js';
 import type { MarketPosition } from '../positions/types.js';
 import type { GetPnLParams, MarketPnL, OptionPnL, PnLResult } from './types.js';
@@ -31,6 +34,15 @@ function classifyTrade(tx: Transaction, address: `0x${string}`): TradeDirection 
   return 'buy';
 }
 
+function fmt(value: bigint, decimals: number): string {
+  return formatUnits(value, decimals);
+}
+
+function fmtSigned(value: bigint, decimals: number): string {
+  if (value > 0n) return `+${formatUnits(value, decimals)}`;
+  return formatUnits(value, decimals);
+}
+
 interface OptionAccumulator {
   buyShares: bigint;
   buyCost: bigint;
@@ -42,6 +54,7 @@ function computeMarketPnL(
   position: MarketPosition,
   trades: Transaction[],
   address: `0x${string}`,
+  decimals: number,
 ): MarketPnL {
   const optionCount = position.options.length;
 
@@ -117,6 +130,14 @@ function computeMarketPnL(
       costBasis: remainingCostBasis,
       realizedPnL: realizedFromSells,
       unrealizedPnL,
+      formatted: {
+        buyCost: fmt(acc.buyCost, decimals),
+        sellProceeds: fmt(acc.sellProceeds, decimals),
+        currentValue: fmt(currentValue, decimals),
+        costBasis: fmt(remainingCostBasis, decimals),
+        realizedPnL: fmtSigned(realizedFromSells, decimals),
+        unrealizedPnL: fmtSigned(unrealizedPnL, decimals),
+      },
     });
   }
 
@@ -132,11 +153,14 @@ function computeMarketPnL(
     unrealizedPnL = totalCurrentValue - totalRemainingCostBasis;
   }
 
+  const totalPnL = realizedPnL + unrealizedPnL;
+
   return {
     marketId: position.marketId,
     title: position.title,
     status: position.status,
     contractAddress: position.contractAddress,
+    baseTokenDecimals: decimals,
     options,
     claimed: position.claimed,
     claimReward,
@@ -146,7 +170,17 @@ function computeMarketPnL(
     totalCurrentValue,
     realizedPnL,
     unrealizedPnL,
-    totalPnL: realizedPnL + unrealizedPnL,
+    totalPnL,
+    formatted: {
+      claimReward: fmt(claimReward, decimals),
+      liquidityCost: fmt(liquidityCost, decimals),
+      liquidityReward: fmt(liquidityReward, decimals),
+      totalCostBasis: fmt(totalRemainingCostBasis, decimals),
+      totalCurrentValue: fmt(totalCurrentValue, decimals),
+      realizedPnL: fmtSigned(realizedPnL, decimals),
+      unrealizedPnL: fmtSigned(unrealizedPnL, decimals),
+      totalPnL: fmtSigned(totalPnL, decimals),
+    },
   };
 }
 
@@ -204,7 +238,6 @@ export async function getPnL(params: GetPnLParams): Promise<PnLResult> {
   // For markets that only appear in trades (no current position), create a stub
   for (const [marketAddr] of txByMarket) {
     if (!positionsByAddr.has(marketAddr)) {
-      // We don't have position data — build a minimal stub from trade data
       const trades = txByMarket.get(marketAddr)!;
       const optionIndices = new Set<number>();
       for (const tx of trades) {
@@ -235,27 +268,61 @@ export async function getPnL(params: GetPnLParams): Promise<PnLResult> {
     }
   }
 
+  // Fetch baseTokenDecimals for all markets via multicall
+  const marketAddresses = [...positionsByAddr.keys()];
+  const decimalsContracts = marketAddresses.map((addr) => ({
+    address: addr as `0x${string}`,
+    abi: TradePoolAbi,
+    functionName: 'baseTokenDecimals' as const,
+  }));
+
+  const decimalsResults = marketAddresses.length > 0
+    ? await multicallRead(rpcUrl, decimalsContracts)
+    : [];
+
+  const decimalsMap = new Map<string, number>();
+  for (let i = 0; i < marketAddresses.length; i++) {
+    const res = decimalsResults[i];
+    const decimals = res?.status === 'success' ? Number(res.result) : 6; // default to 6 (USDT)
+    decimalsMap.set(marketAddresses[i], decimals);
+  }
+
   // Compute PnL for each market
   const markets: MarketPnL[] = [];
   let totalRealizedPnL = 0n;
   let totalUnrealizedPnL = 0n;
+  // Track decimals used for top-level formatting (use first market's, default 6)
+  let topLevelDecimals = 6;
+  let firstMarketSeen = false;
 
   for (const [marketAddr, position] of positionsByAddr) {
     const trades = txByMarket.get(marketAddr) ?? [];
-    // Skip markets with no trades and no meaningful position
     if (trades.length === 0 && position.options.every((o) => o.shares === 0n)) continue;
 
-    const marketPnL = computeMarketPnL(position, trades, address);
+    const decimals = decimalsMap.get(marketAddr) ?? 6;
+    if (!firstMarketSeen) {
+      topLevelDecimals = decimals;
+      firstMarketSeen = true;
+    }
+
+    const marketPnL = computeMarketPnL(position, trades, address, decimals);
     markets.push(marketPnL);
     totalRealizedPnL += marketPnL.realizedPnL;
     totalUnrealizedPnL += marketPnL.unrealizedPnL;
   }
+
+  const totalPnL = totalRealizedPnL + totalUnrealizedPnL;
 
   return {
     address,
     markets,
     totalRealizedPnL,
     totalUnrealizedPnL,
-    totalPnL: totalRealizedPnL + totalUnrealizedPnL,
+    totalPnL,
+    formatted: {
+      totalRealizedPnL: fmtSigned(totalRealizedPnL, topLevelDecimals),
+      totalUnrealizedPnL: fmtSigned(totalUnrealizedPnL, topLevelDecimals),
+      totalPnL: fmtSigned(totalPnL, topLevelDecimals),
+    },
   };
 }
