@@ -20,10 +20,11 @@ import { buildTransferRawTx } from './tx/buildTransferRawTx.js';
 import { AccountBalanceResult } from './accounts/types.js';
 import { getSmartAccountBalance } from './accounts/getSmartAccountBalance.js';
 import { getEOAFromSmartAccount } from './accounts/getEOAFromSmartAccount.js';
-import { PositionByMarket, PositionsResult, PortfolioValue } from './positions/types.js';
+import { LPPosition, PositionByMarket, PositionsResult, PortfolioValue } from './positions/types.js';
 import { getPositions } from './positions/getPositions.js';
 import { getPositionByMarket } from './positions/getPositionByMarket.js';
 import { getPortfolioValue } from './positions/getPortfolioValue.js';
+import { getLPPosition } from './positions/getLPPosition.js';
 import { GetTransactionsParams, GetTransactionDetailsParams, GetMarketTransactionsParams, GetTradeHistoryParams, TransactionsResult, TransactionDetails, MarketTransactionsResult, TradeHistoryResult } from './transactions/types.js';
 import { getTransactions } from './transactions/getTransactions.js';
 import { getTransactionDetails } from './transactions/getTransactionDetails.js';
@@ -193,6 +194,10 @@ export class Rain {
 
   async getPositionByMarket(address: `0x${string}`, marketId: string): Promise<PositionByMarket> {
     return getPositionByMarket({ address, marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
+  }
+
+  async getLPPosition(address: `0x${string}`, marketId: string): Promise<LPPosition> {
+    return getLPPosition({ address, marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
   }
 
   async getPortfolioValue(params: {

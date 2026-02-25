@@ -47,6 +47,24 @@ export interface PositionByMarket {
   dynamicPayout: bigint[];
 }
 
+export interface GetLPPositionParams {
+  address: `0x${string}`;
+  marketId: string;
+  apiUrl: string;
+  rpcUrl: string;
+}
+
+export interface LPPosition {
+  marketId: string;
+  title: string;
+  status: string;
+  contractAddress: `0x${string}`;
+  userLiquidity: bigint;
+  totalLiquidity: bigint;
+  poolShareBps: number;
+  liquidityShareBps: bigint;
+}
+
 export interface GetPortfolioValueParams {
   address: `0x${string}`;
   tokenAddresses: `0x${string}`[];
