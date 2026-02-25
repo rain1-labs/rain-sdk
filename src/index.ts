@@ -10,3 +10,4 @@ export type { AddLiquidityTxParams, DepositToSmartAccountTxParams, WithdrawFromS
 export type { Transaction, TransactionType, GetTransactionsParams, TransactionsResult, TransactionDetails, GetTransactionDetailsParams, GetMarketTransactionsParams, MarketTransactionsResult, GetTradeHistoryParams, TradeHistoryResult } from './transactions/types.js';
 export type { Unsubscribe, WebSocketConfig, WebSocketReconnectConfig, MarketTradeEventName, PriceAffectingEventName, MarketEventName, MarketTradeEvent, SubscribeMarketEventsParams, PriceUpdate, SubscribePriceUpdatesParams } from './websocket/types.js';
 export type { PriceHistoryInterval, PriceCandle, PriceHistoryResult, GetPriceHistoryParams } from './priceHistory/types.js';
+export type { GetPnLParams, OptionPnL, MarketPnL, PnLResult } from './pnl/types.js';

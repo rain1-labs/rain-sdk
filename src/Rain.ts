@@ -32,6 +32,8 @@ import { createWsClient, subscribeToMarketEvents, subscribePriceUpdates } from '
 import { SubscribeMarketEventsParams, SubscribePriceUpdatesParams, Unsubscribe } from './websocket/types.js';
 import { GetPriceHistoryParams, PriceHistoryResult } from './priceHistory/types.js';
 import { getPriceHistory } from './priceHistory/getPriceHistory.js';
+import { GetPnLParams, PnLResult } from './pnl/types.js';
+import { getPnL } from './pnl/getPnL.js';
 
 export class Rain {
 
@@ -244,6 +246,26 @@ export class Rain {
       throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
     }
     return getTradeHistory({ ...params, subgraphUrl, subgraphApiKey: params.subgraphApiKey ?? this.subgraphApiKey });
+  }
+
+  async getPnL(
+    params: Omit<GetPnLParams, 'subgraphUrl' | 'subgraphApiKey' | 'apiUrl' | 'rpcUrl'> & { subgraphUrl?: string; subgraphApiKey?: string; apiUrl?: string; rpcUrl?: string }
+  ): Promise<PnLResult> {
+    const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
+    const rpcUrl = params.rpcUrl ?? this.rpcUrl;
+    if (!subgraphUrl) {
+      throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
+    }
+    if (!rpcUrl) {
+      throw new Error('rpcUrl is required — pass it in the Rain constructor config or in the method params');
+    }
+    return getPnL({
+      ...params,
+      subgraphUrl,
+      subgraphApiKey: params.subgraphApiKey ?? this.subgraphApiKey,
+      apiUrl: params.apiUrl ?? this.apiUrl,
+      rpcUrl,
+    });
   }
 
   private getWsClient(): PublicClient<WebSocketTransport> {
