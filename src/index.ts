@@ -3,7 +3,7 @@ export { RainAA } from './RainAA.js'
 export * from './types.js';
 export { createRpcClient, multicallRead } from './utils/multicall.js';
 export { createWsClient, subscribePriceUpdates } from './utils/websocket.js';
-export type { Market, GetMarketsParams, MarketSortBy, MarketStatus, MarketDetails, MarketOption, GetMarketDetailsParams, OptionPrice, GetMarketPricesParams, MarketVolume, OptionVolume, GetMarketVolumeParams, MarketLiquidity, OptionLiquidity, GetMarketLiquidityParams, GetMarketAddressParams, GetMarketIdParams } from './markets/types.js';
+export type { Market, GetMarketsParams, MarketSortBy, MarketStatus, MarketDetails, MarketOption, GetMarketDetailsParams, OptionPrice, GetMarketPricesParams, MarketVolume, OptionVolume, GetMarketVolumeParams, MarketLiquidity, OptionLiquidity, GetMarketLiquidityParams, GetMarketAddressParams, GetMarketIdParams, ProtocolStats, GetProtocolStatsParams } from './markets/types.js';
 export type { AccountBalanceResult, TokenBalance } from './accounts/types.js';
 export type { PositionsResult, MarketPosition, OptionPosition, GetPositionsParams, PositionByMarket, GetPositionByMarketParams, PortfolioValue, MarketPositionValue, GetPortfolioValueParams } from './positions/types.js';
 export type { AddLiquidityTxParams, DepositToSmartAccountTxParams, WithdrawFromSmartAccountTxParams, SellOptionTxParams, CancelOrdersTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, RawTransaction } from './tx/types.js';

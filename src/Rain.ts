@@ -1,5 +1,5 @@
 import { PublicClient, WebSocketTransport } from 'viem';
-import { GetMarketsParams, Market, MarketDetails, MarketLiquidity, MarketVolume, OptionPrice } from './markets/types.js';
+import { GetMarketsParams, Market, MarketDetails, MarketLiquidity, MarketVolume, OptionPrice, ProtocolStats } from './markets/types.js';
 import { getMarkets } from './markets/getMarkets.js';
 import { getMarketDetails } from './markets/getMarketDetails.js';
 import { getMarketPrices } from './markets/getMarketPrices.js';
@@ -7,6 +7,7 @@ import { getMarketVolume } from './markets/getMarketVolume.js';
 import { getMarketLiquidity } from './markets/getMarketLiquidity.js';
 import { getMarketAddress } from './markets/getMarketAddress.js';
 import { getMarketId } from './markets/getMarketId.js';
+import { getProtocolStats } from './markets/getProtocolStats.js';
 import { AddLiquidityTxParams, ApproveTxParams, CancelOrdersTxParams, ClaimTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, CreateMarketTxParams, DepositToSmartAccountTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams, WithdrawFromSmartAccountTxParams } from './tx/types.js';
 import { buildAddLiquidityRawTx, buildEnterOptionRawTx, buildLimitBuyOrderRawTx, buildSellOptionRawTx, buildCancelBuyOrdersRawTx, buildCancelSellOrdersRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
@@ -164,6 +165,15 @@ export class Rain {
 
   async getMarketLiquidity(marketId: string): Promise<MarketLiquidity> {
     return getMarketLiquidity({ marketId, apiUrl: this.apiUrl, rpcUrl: this.rpcUrl! });
+  }
+
+  async getProtocolStats(): Promise<ProtocolStats> {
+    return getProtocolStats({
+      apiUrl: this.apiUrl,
+      rpcUrl: this.rpcUrl!,
+      subgraphUrl: this.subgraphUrl,
+      subgraphApiKey: this.subgraphApiKey,
+    });
   }
 
   async getSmartAccountBalance(params: {

@@ -116,3 +116,18 @@ export interface GetMarketIdParams {
   marketAddress: `0x${string}`;
   apiUrl: string;
 }
+
+export interface ProtocolStats {
+  tvl: bigint;
+  totalVolume: bigint;
+  activeMarkets: number;
+  totalMarkets: number;
+  uniqueTraders: number;
+}
+
+export interface GetProtocolStatsParams {
+  apiUrl: string;
+  rpcUrl: string;
+  subgraphUrl?: string;
+  subgraphApiKey?: string;
+}
