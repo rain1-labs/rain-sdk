@@ -5,6 +5,8 @@ import { getMarketDetails } from './markets/getMarketDetails.js';
 import { getMarketPrices } from './markets/getMarketPrices.js';
 import { getMarketVolume } from './markets/getMarketVolume.js';
 import { getMarketLiquidity } from './markets/getMarketLiquidity.js';
+import { getMarketAddress } from './markets/getMarketAddress.js';
+import { getMarketId } from './markets/getMarketId.js';
 import { ApproveTxParams, CancelOrdersTxParams, ClaimTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, CreateMarketTxParams, DepositToSmartAccountTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams, WithdrawFromSmartAccountTxParams } from './tx/types.js';
 import { buildEnterOptionRawTx, buildLimitBuyOrderRawTx, buildSellOptionRawTx, buildCancelBuyOrdersRawTx, buildCancelSellOrdersRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
@@ -132,6 +134,14 @@ export class Rain {
       recipient: params.eoaAddress,
       amount: params.amount,
     });
+  }
+
+  async getMarketAddress(marketId: string): Promise<`0x${string}`> {
+    return getMarketAddress({ marketId, apiUrl: this.apiUrl });
+  }
+
+  async getMarketId(marketAddress: `0x${string}`): Promise<string> {
+    return getMarketId({ marketAddress, apiUrl: this.apiUrl });
   }
 
   async getMarketDetails(marketId: string): Promise<MarketDetails> {

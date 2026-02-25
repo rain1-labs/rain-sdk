@@ -106,3 +106,13 @@ export interface MarketLiquidity {
 }
 
 export type GetMarketLiquidityParams = GetMarketDetailsParams;
+
+export interface GetMarketAddressParams {
+  marketId: string;
+  apiUrl: string;
+}
+
+export interface GetMarketIdParams {
+  marketAddress: `0x${string}`;
+  apiUrl: string;
+}
