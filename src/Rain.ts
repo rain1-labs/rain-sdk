@@ -7,8 +7,8 @@ import { getMarketVolume } from './markets/getMarketVolume.js';
 import { getMarketLiquidity } from './markets/getMarketLiquidity.js';
 import { getMarketAddress } from './markets/getMarketAddress.js';
 import { getMarketId } from './markets/getMarketId.js';
-import { ApproveTxParams, CancelOrdersTxParams, ClaimTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, CreateMarketTxParams, DepositToSmartAccountTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams, WithdrawFromSmartAccountTxParams } from './tx/types.js';
-import { buildEnterOptionRawTx, buildLimitBuyOrderRawTx, buildSellOptionRawTx, buildCancelBuyOrdersRawTx, buildCancelSellOrdersRawTx } from './tx/buildRawTransactions.js';
+import { AddLiquidityTxParams, ApproveTxParams, CancelOrdersTxParams, ClaimTxParams, CloseMarketTxParams, ChooseWinnerTxParams, ResolveMarketTxParams, CreateMarketTxParams, DepositToSmartAccountTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams, WithdrawFromSmartAccountTxParams } from './tx/types.js';
+import { buildAddLiquidityRawTx, buildEnterOptionRawTx, buildLimitBuyOrderRawTx, buildSellOptionRawTx, buildCancelBuyOrdersRawTx, buildCancelSellOrdersRawTx } from './tx/buildRawTransactions.js';
 import { buildApproveRawTx } from './tx/buildApprovalRawTx.js';
 import { buildCreateMarketRawTx } from './tx/CreateMarket/buildCreateMarketRawTx.js';
 import { RainCoreConfig, RainEnvironment } from './types.js';
@@ -98,6 +98,10 @@ export class Rain {
 
   buildCancelSellOrdersTx(params: CancelOrdersTxParams): RawTransaction {
     return buildCancelSellOrdersRawTx(params);
+  }
+
+  buildAddLiquidityTx(params: AddLiquidityTxParams): RawTransaction {
+    return buildAddLiquidityRawTx(params);
   }
 
   buildCreateMarketTx(params: CreateMarketTxParams): Promise<RawTransaction[]> {

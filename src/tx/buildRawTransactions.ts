@@ -1,8 +1,8 @@
 import { encodeFunctionData } from 'viem';
 import { TradePoolAbi } from '../abi/TradeMarketsAbi.js';
-import { CancelOrdersTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams } from './types.js';
+import { AddLiquidityTxParams, CancelOrdersTxParams, EnterLimitOptionTxParams, EnterOptionTxParams, RawTransaction, SellOptionTxParams } from './types.js';
 import { convertToWeiEthers } from '../utils/helpers.js';
-import { ENTER_OPTION, PLACE_BUY_ORDER, PLACE_SELL_ORDER, CANCEL_BUY_ORDERS, CANCEL_SELL_ORDERS } from '../constants/contractmethods.js';
+import { ENTER_OPTION, ENTER_LIQUIDITY, PLACE_BUY_ORDER, PLACE_SELL_ORDER, CANCEL_BUY_ORDERS, CANCEL_SELL_ORDERS } from '../constants/contractmethods.js';
 export function buildEnterOptionRawTx(
     params: EnterOptionTxParams
 ): RawTransaction {
@@ -18,6 +18,24 @@ export function buildEnterOptionRawTx(
             abi: TradePoolAbi,
             functionName: ENTER_OPTION,
             args: [selectedOption, buyAmountInWei],
+        }),
+    };
+}
+
+export function buildAddLiquidityRawTx(
+    params: AddLiquidityTxParams
+): RawTransaction {
+    const { marketContractAddress, liquidityAmountInWei } = params;
+
+    if (!marketContractAddress) throw new Error('Market contract address is required');
+    if (!liquidityAmountInWei) throw new Error('Liquidity amount is required');
+
+    return {
+        to: marketContractAddress,
+        data: encodeFunctionData({
+            abi: TradePoolAbi,
+            functionName: ENTER_LIQUIDITY,
+            args: [liquidityAmountInWei],
         }),
     };
 }

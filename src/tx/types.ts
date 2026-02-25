@@ -101,6 +101,11 @@ export interface ChooseWinnerTxParams {
     rpcUrl?: string;
 }
 
+export interface AddLiquidityTxParams {
+    marketContractAddress: `0x${string}`;
+    liquidityAmountInWei: bigint;
+}
+
 export interface ResolveMarketTxParams {
     marketId: string;
     winningOption: number; // 1-indexed
