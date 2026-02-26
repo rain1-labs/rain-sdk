@@ -26,8 +26,8 @@ export function validateCreateMarketParams(params: CreateMarketTxParams) {
     if (!creator) throw new Error("creator address is required");
     if (!marketQuestion) throw new Error("question is required");
     if (!marketDescription) throw new Error("description is required");
-    if (!Array.isArray(marketOptions) || marketOptions.length < 2 || marketOptions.length > 26) {
-        throw new Error("options must be between 2 and 26");
+    if (!Array.isArray(marketOptions) || marketOptions.length < 3 || marketOptions.length > 26) {
+        throw new Error("options must be between 3 and 26");
     }
     if (marketOptions.some(opt => !opt?.toString().trim())) {
         throw new Error("options cannot contain empty values");
