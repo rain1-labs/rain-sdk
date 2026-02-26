@@ -1,0 +1,8 @@
+export { getLeaderboard } from './getLeaderboard.js';
+export type {
+  LeaderboardTimeframe,
+  LeaderboardSortBy,
+  LeaderboardEntry,
+  GetLeaderboardParams,
+  LeaderboardResult,
+} from './types.js';

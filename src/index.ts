@@ -11,3 +11,4 @@ export type { Transaction, TransactionType, GetTransactionsParams, TransactionsR
 export type { Unsubscribe, WebSocketConfig, WebSocketReconnectConfig, MarketTradeEventName, PriceAffectingEventName, MarketEventName, MarketTradeEvent, SubscribeMarketEventsParams, PriceUpdate, SubscribePriceUpdatesParams } from './websocket/types.js';
 export type { PriceHistoryInterval, PriceCandle, PriceHistoryResult, GetPriceHistoryParams } from './priceHistory/types.js';
 export type { GetPnLParams, OptionPnL, MarketPnL, PnLResult } from './pnl/types.js';
+export type { LeaderboardTimeframe, LeaderboardSortBy, LeaderboardEntry, GetLeaderboardParams, LeaderboardResult } from './leaderboard/types.js';

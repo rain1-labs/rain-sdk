@@ -36,6 +36,8 @@ import { GetPriceHistoryParams, PriceHistoryResult } from './priceHistory/types.
 import { getPriceHistory } from './priceHistory/getPriceHistory.js';
 import { GetPnLParams, PnLResult } from './pnl/types.js';
 import { getPnL } from './pnl/getPnL.js';
+import { GetLeaderboardParams, LeaderboardResult } from './leaderboard/types.js';
+import { getLeaderboard } from './leaderboard/getLeaderboard.js';
 
 export class Rain {
 
@@ -281,6 +283,16 @@ export class Rain {
       apiUrl: params.apiUrl ?? this.apiUrl,
       rpcUrl,
     });
+  }
+
+  async getLeaderboard(
+    params: Omit<GetLeaderboardParams, 'subgraphUrl' | 'subgraphApiKey'> & { subgraphUrl?: string; subgraphApiKey?: string }
+  ): Promise<LeaderboardResult> {
+    const subgraphUrl = params.subgraphUrl ?? this.subgraphUrl;
+    if (!subgraphUrl) {
+      throw new Error('subgraphUrl is required — pass it in the Rain constructor config or in the method params');
+    }
+    return getLeaderboard({ ...params, subgraphUrl, subgraphApiKey: params.subgraphApiKey ?? this.subgraphApiKey });
   }
 
   private getWsClient(): PublicClient<WebSocketTransport> {
