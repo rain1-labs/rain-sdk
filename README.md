@@ -1,15 +1,38 @@
-# Rain SDK Documentation
+# Rain SDK
 
-## Overview
+TypeScript SDK for the Rain prediction-markets protocol on Arbitrum One.
 
-Rain SDK is designed as a **clean, modular, and extensible TypeScript SDK** for interacting with Rain markets and preparing on-chain transactions.
+Build, sign, and send prediction market transactions — from creating markets and trading options to claiming winnings and streaming live events.
 
-The SDK is intentionally split into two layers:
+## Architecture
 
-* **Rain** → Stateless, public-facing utilities (data fetching, raw transaction builders)
-* **RainAA** → Stateful Account Abstraction layer (smart accounts)
+```
+┌──────────────────────────────────────────────────────────┐
+│                      Your Application                     │
+├────────────────────────┬─────────────────────────────────┤
+│         Rain           │            RainAA               │
+│   (WHAT to do)         │       (HOW to execute)          │
+│                        │                                 │
+│  • Market queries      │  • Smart account creation       │
+│  • Tx builders         │  • Gas-sponsored execution      │
+│  • Position reads      │  • Tx submission                │
+│  • WebSocket streams   │  • Session management           │
+│  • Analytics           │                                 │
+├────────────────────────┴─────────────────────────────────┤
+│                     RawTransaction                        │
+│              { to, data, value? }                         │
+├──────────────────────────────────────────────────────────┤
+│               Arbitrum One (on-chain)                     │
+│         Diamond Proxy Pools + AMM per option              │
+└──────────────────────────────────────────────────────────┘
+```
 
----
+The SDK is split into two independent classes:
+
+- **`Rain`** — Stateless. Fetches data, builds unsigned transactions, subscribes to events. Does not require a wallet.
+- **`RainAA`** — Stateful. Manages Alchemy smart accounts, signs and sends transactions via account abstraction.
+
+All transaction builders return a `RawTransaction` — the caller decides how to execute it (via `RainAA`, wagmi, ethers, or any provider).
 
 ## Installation
 
@@ -17,390 +40,422 @@ The SDK is intentionally split into two layers:
 npm install @rainprotocolsdk/sdk
 ```
 
-or
+**Peer dependency**: `viem ^2.0.0`
 
-```bash
-yarn add @rainprotocolsdk/sdk
+## Quick Start
+
+```ts
+import { Rain, RainAA } from '@rainprotocolsdk/sdk';
+
+// 1. Initialize (stateless — no wallet needed)
+const rain = new Rain({ environment: 'development' });
+
+// 2. Fetch markets
+const markets = await rain.getPublicMarkets({ limit: 10 });
+
+// 3. Build a buy transaction
+const rawTx = rain.buildBuyOptionRawTx({
+  marketContractAddress: '0x...',
+  selectedOption: 1n,
+  buyAmountInWei: 10_000_000n,  // 10 USDT (6 decimals)
+});
+
+// 4. Execute via your provider, OR via RainAA:
+await yourProvider.sendTransaction(rawTx);
 ```
+
+## Configuration
+
+```ts
+const rain = new Rain({
+  environment: 'development',         // 'development' | 'stage' | 'production'
+  rpcUrl: 'https://...',              // Optional — defaults to public Arbitrum RPCs
+  wsRpcUrl: 'wss://...',             // Required for subscribeToMarketEvents / subscribePriceUpdates
+  subgraphUrl: 'https://...',        // Required for transaction history / price history / analytics
+  subgraphApiKey: '...',             // Optional — TheGraph API key
+  wsReconnect: { attempts: 5, delay: 1000 },  // Optional — WebSocket auto-reconnect
+});
+```
+
+### Environments
+
+| Environment   | API                    | Factory Address                              |
+| ------------- | ---------------------- | -------------------------------------------- |
+| `development` | `dev-api.rain.one`     | `0x148DA7F2039B2B00633AC2ab566f59C8a4C86313` |
+| `stage`       | `stg-api.rain.one`     | `0x6109c9f28FE3Ad84c51368f7Ef2d487ca020c561` |
+| `production`  | `prod-api.rain.one`    | `0xccCB3C03D9355B01883779EF15C1Be09cf3623F1` |
 
 ---
 
-### Initialization
+## API Reference
 
-```ts
-import { Rain } from "@rainprotocolsdk/sdk";
+### Market Queries
 
-const rain = new Rain();
-```
-
-> The constructor is intentionally empty to allow future configuration without breaking changes.
-
----
-
-## getPublicMarkets
-
-Fetches public market data from the Rain backend.
-
-### Method Signature
-
-```ts
-getPublicMarkets(params: GetMarketsParams): Promise<Market[]>;
-```
-
-### Parameters
-
-```ts
-interface GetMarketsParams {
-  limit: number;
-  offset: number;
-  sortBy?: "Liquidity" | "Volumn" | "latest";
-  status?: 'Live' | 'New' | 'WaitingForResult' | 'UnderDispute' | 'UnderAppeal' | 'ClosingSoon' | 'InReview' | 'InEvaluation' | 'Closed' | 'Trading';
-}
-```
-
-### Example
+#### `getPublicMarkets(params)` — Browse markets
 
 ```ts
 const markets = await rain.getPublicMarkets({
-  limit?: 12,
-  offset?: 1,
-  sortBy?: "Liquidity",
-  status?: "Live",
+  limit: 12,
+  offset: 0,
+  sortBy: 'Liquidity',          // 'Liquidity' | 'Volumn' | 'latest'
+  status: 'Live',               // 'Live' | 'Trading' | 'Closed' | ...
+  creator: '0x...',             // Optional — filter by creator
+});
+// Returns: Market[]
+// { id, title, totalVolume, status, contractAddress, poolOwnerWalletAddress }
+```
+
+#### `getMarketDetails(marketId)` — Full market data
+
+Combines Rain API data with on-chain reads from the diamond proxy.
+
+```ts
+const details = await rain.getMarketDetails('698c8f116e985bbfacc7fc01');
+// Returns: MarketDetails
+// {
+//   id, title, status, contractAddress,
+//   options: [{ choiceIndex, optionName, currentPrice, totalFunds, totalVotes }],
+//   poolState, numberOfOptions, startTime, endTime, oracleEndTime,
+//   allFunds, allVotes, totalLiquidity, winner, poolFinalized,
+//   isPublic, baseToken, baseTokenDecimals, poolOwner, resolver,
+//   resolverIsAI, isDisputed, isAppealed
+// }
+```
+
+#### `getMarketPrices(marketId)` — Current option prices
+
+```ts
+const prices = await rain.getMarketPrices('698c8f116e985bbfacc7fc01');
+// Returns: OptionPrice[]
+// [{ choiceIndex: 0, optionName: 'Yes', currentPrice: 650000000000000000n }]
+// currentPrice is in 1e18 — divide by 1e18 for decimal (0.65 = 65%)
+```
+
+#### `getMarketVolume(marketId)` — Volume breakdown
+
+```ts
+const volume = await rain.getMarketVolume('698c8f116e985bbfacc7fc01');
+// Returns: MarketVolume
+// { marketId, contractAddress, totalVolume, optionVolumes: [{ choiceIndex, optionName, volume }] }
+```
+
+#### `getMarketLiquidity(marketId)` — Liquidity & order book
+
+```ts
+const liq = await rain.getMarketLiquidity('698c8f116e985bbfacc7fc01');
+// Returns: MarketLiquidity
+// { marketId, contractAddress, totalLiquidity, allFunds,
+//   optionLiquidity: [{ choiceIndex, optionName, totalFunds, firstBuyOrderPrice, firstSellOrderPrice }] }
+```
+
+#### `getMarketAddress(marketId)` / `getMarketId(marketAddress)` — ID/Address lookup
+
+```ts
+const address = await rain.getMarketAddress('698c8f116e985bbfacc7fc01');
+const id = await rain.getMarketId('0xd262abd3d58038e15736Ec32c4F7b020C2B21dB5');
+```
+
+#### `getProtocolStats()` — Protocol-wide metrics
+
+```ts
+const stats = await rain.getProtocolStats();
+// Returns: ProtocolStats
+// { tvl, totalVolume, activeMarkets, totalMarkets, uniqueTraders }
+```
+
+---
+
+### Transaction Builders
+
+All builders return `RawTransaction` — `{ to, data, value? }`. They do **not** send transactions.
+
+#### `buildApprovalTx(params)` — ERC20 approve
+
+```ts
+const tx = rain.buildApprovalTx({
+  tokenAddress: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',  // USDT
+  spender: '0x...',    // market contract address
+  amount: 100_000_000n, // Optional — defaults to max uint256
 });
 ```
 
----
+#### `buildCreateMarketTx(params)` — Create a market
 
-## buildApprovalTx
-
-```
-Builds a raw ERC20 approval transaction if needed.
-
-This function prepares an unsigned approve(spender, amount) transaction and does not execute it.
-
-If amount is not provided, a default large allowance is approved.
-```
-
-### Return Type
+Returns an array: `[approveTx, createTx]` if approval is needed, or `[createTx]` if already approved.
 
 ```ts
-interface RawTransaction {
-  to: `0x${string}`;
-  data: `0x${string}`;
+const txs = await rain.buildCreateMarketTx({
+  marketQuestion: 'Will BTC hit 100k?',
+  marketOptions: ['Yes', 'No'],
+  marketTags: ['crypto', 'bitcoin'],
+  marketDescription: 'Prediction market for BTC price',
+  isPublic: true,
+  isPublicPoolResolverAi: false,
+  creator: '0x996ea23940f4a01610181D04bdB6F862719b63f0',
+  startTime: 1770836400n,
+  endTime: 1770922800n,
+  no_of_options: 2n,
+  inputAmountWei: 100_000_000n,   // 100 USDT (min 10 tokens)
+  barValues: [50, 50],             // Initial probability distribution (%)
+  baseToken: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+  tokenDecimals: 6,
+});
+
+// Execute sequentially
+for (const tx of txs) {
+  await provider.sendTransaction(tx);
 }
 ```
 
-### Example
+#### `buildBuyOptionRawTx(params)` — Market buy
 
 ```ts
-const approvalTx = rain.buildApprovalTx({ 
-  tokenAddress: `0x${string}`, // Approval token address 
-  spender: `0x${string}`,  // Market contract address
-  amount?: 1000000000000000000n // optional parameter
-   });
+const tx = rain.buildBuyOptionRawTx({
+  marketContractAddress: '0x...',
+  selectedOption: 1n,              // Option index (bigint)
+  buyAmountInWei: 10_000_000n,    // 10 USDT
+});
 ```
 
----
-
-## buildCreateMarketTx
-
-Builds a **raw EVM transaction** for creating a market in rain protocol.
-
-This function **does not send the transaction** — it only prepares calldata.
-
-### Method Signature
+#### `buildLimitBuyOptionTx(params)` — Limit buy order
 
 ```ts
-buildCreateMarketTx(params: CreateMarketTxParams): RawTransaction;
-```
-
-### Parameters
-
-```ts
-interface CreateMarketTxParams {
-  marketQuestion: string;
-  marketOptions: string[];
-  marketTags: string[];
-  marketDescription: string;
-  isPublic: boolean;
-  isPublicPoolResolverAi: boolean;
-  creator: `0x${string}`;
-  startTime: number | bigint;        // Unix timestamp (seconds)
-  endTime: number | bigint;          // Must be > startTime
-  no_of_options: number;                   // Number of options (> 0)
-  ipfsUrl: string;                   // IPFS CID
-  inputAmountWei: bigint;            // Initial liquidity (token wei)
-  barValues: (number)[];             // Token Distribution values in options in %
-  baseToken: `0x${string}`;          // ERC20 token address
-  tokenDecimals?: number;            // Optional (default: 6)
-}
-```
-
-### Validations
-
-| Field                    | Type               | Required | Description                      |
-| ------------------------ | ------------------ | -------- | -------------------------------- |
-| `marketQuestion`         | `string`          | ✅        | Market question (cannot be empty)|
-| `marketOptions`          | `string[]`        | ✅        | List of market options (2 <= 26 ) |
-| `marketTags`             | `string[]`        | ✅        | Tags related to the market (1 <= 3  ) |
-| `marketDescription`      | `string`          | ✅        | Detailed market description        |
-| `isPublic`               | `boolean`          | ✅        | Whether market is public         |
-| `isPublicPoolResolverAi` | `boolean`          | ✅        | AI resolver flag                 |
-| `creator`                | `0x${string}`      | ✅        | Market creator address           |
-| `startTime`              | `number \| bigint` | ✅        | Market start timestamp           |
-| `endTime`                | `number \| bigint` | ✅        | Must be greater than `startTime` |
-| `no_of_options`          | `number`           | ✅        | Number of market options (> 2)   |
-| `ipfsUrl`                | `string`           | ✅        | IPFS CID containing metadata     |
-| `inputAmountWei`         | `bigint`           | ✅        | Initial liquidity amount         |
-| `barValues`              | `array`            | ✅        | Cannot be empty                  |
-| `baseToken`              | `0x${string}`      | ✅        | ERC20 base token address         |
-| `tokenDecimals`          | `number`           | ❌        | Defaults to `6`                  |
-
-### Minimum Liquidity Rule
-
-#### inputAmountWei >= 10 tokens
-
-### Return Type
-
-```ts
-interface RawTransaction {
-  to: `0x${string}`;
-  data: `0x${string}`;
-}
-```
-
-### Example
-
-```ts
-rain.buildCreateMarketTx({
-    marketQuestion: "Will BTC hit 100k?",
-    marketOptions: ["Yes", "No"],
-    marketTags: ["crypto", "bitcoin"],
-    marketDescription: "Prediction market for BTC price",
-    isPublic: true,
-    isPublicPoolResolverAi: false,
-    creator: "0x996ea23940f4a01610181D04bdB6F862719b63f0",
-    startTime: 1770836400,
-    endTime: 1770922800,
-    options: 3,
-    ipfsUrl: "QmUdu2eLEQ2qFtNeVVLfVQDBCoc4DT5752enxDitLGmVec",
-    inputAmountWei: 100000000n,
-    barValues: [48, 40, 1],
-    baseToken: "0xCa4f77A38d8552Dd1D5E44e890173921B67725F4"
-  })
-```
-
-### Note: 
-If the user has not approved the **Rain Factory contract**, the function will return two transactions **(approve + create market)**, but if approval already exists, it will return only one transaction **(create market)**.
-
-### Recommended Execution Pattern
-
-```ts
-// 1. Build raw transaction
-const rawTx = rain.buildCreateMarketTx[{...}];
-
-// 2. Execute using your provider
-await yourProvider.sendTransaction(rawTx[index]);
-```
-
----
-
-## buildBuyOptionRawTx
-
-Builds a **raw EVM transaction** for entering a market option.
-
-This function **does not send the transaction** — it only prepares calldata.
-
-### Method Signature
-
-```ts
-buildBuyOptionRawTx(params: EnterOptionTxParams): RawTransaction;
-```
-
-### Parameters
-
-```ts
-interface EnterOptionTxParams {
-  address: `0x${string}`;        // Trademarket contract address
-  selectedOption: number;       // Option index
-  buyInWei: bigint;              // Amount in wei
-}
-```
-
-### Return Type
-
-```ts
-interface RawTransaction {
-  to: `0x${string}`;
-  data: `0x${string}`;
-}
-```
-
-### Example
-
-```ts
-const rawTx = rain.buildBuyOptionRawTx({
-  address: `0x${string}`,
+const tx = rain.buildLimitBuyOptionTx({
+  marketContractAddress: '0x...',
   selectedOption: 1,
-  buyInWei: 1000000000000000000n,
+  pricePerShare: 500000000000000000n,  // 0.50 in 1e18
+  buyAmountInWei: 10_000_000n,
+  tokenDecimals: 6,
 });
 ```
----
 
-## buildLimitBuyOptionTx
-
-Builds a **raw EVM transaction** for placing a limit buy order on a Rain market.
-
-This function **does not send the transaction** — it only prepares calldata.
-
-### Method Signature
+#### `buildSellOptionTx(params)` — Place sell order
 
 ```ts
-buildLimitBuyOptionTx(params: EnterLimitOptionTxParams): RawTransaction
+const tx = rain.buildSellOptionTx({
+  marketContractAddress: '0x...',
+  selectedOption: 1,
+  pricePerShare: 0.75,     // Target price (0-1)
+  shares: 5_000_000n,     // Shares to sell
+  tokenDecimals: 6,
+});
 ```
 
-### Parameters
+#### `buildCancelBuyOrdersTx(params)` / `buildCancelSellOrdersTx(params)` — Cancel orders
 
 ```ts
-interface EnterLimitOptionTxParams {
-    marketContractAddress: `0x${string}`; // market contract address
-    selectedOption: number; // Option index
-    pricePerShare: bigint; // price per share
-    buyAmountInWei: bigint; // total buy amount (already converted to token wei)
-    tokenDecimals?: number; // token decimals optional (default: `6`)
-}
-```
-### Validations
-
-| Field                   | Type          | Required | Description                                            |
-| ----------------------- | ------------- | -------- | ------------------------------------------------------ |
-| `marketContractAddress` | `0x${string}` | ✅        | Address of the market contract             |
-| `selectedOption`        | `number`      | ✅        | Option index to place the buy order for                |
-| `pricePerShare`         | `number`      | ✅        | Limit price per share (between `0` and `1`)            |
-| `buyAmountInWei`        | `bigint`      | ✅        | Total amount to spend (already converted to token wei) |
-| `tokenDecimals`         | `number`      | ❌        | Token decimals optional (default: `6`)                          |
-
-### Return Type
-
-```ts
-interface RawTransaction {
-  to: `0x${string}`;
-  data: `0x${string}`;
-}
+const tx = rain.buildCancelBuyOrdersTx({
+  marketContractAddress: '0x...',
+  orders: [
+    { option: 1, price: 0.5, orderID: 1n },
+    { option: 1, price: 0.6, orderID: 2n },
+  ],
+});
 ```
 
-### Example
+#### `buildAddLiquidityTx(params)` — Provide liquidity
 
 ```ts
-rain.buildLimitBuyOptionTx({
-    marketContractAddress: `0x${string}`,
-    buyAmountInWei: 1000000,
-    pricePerShare: 0.1,
-    selectedOption: 1,
-  })
+const tx = rain.buildAddLiquidityTx({
+  marketContractAddress: '0x...',
+  liquidityAmountInWei: 100_000_000n,  // 100 USDT
+});
 ```
 
----
+> Note: Liquidity is locked until market resolution. There is no `removeLiquidity` — LPs recover their share via `buildClaimTx` after resolution.
 
-## buildClaimTx
-
-Builds a **raw EVM transaction** to claim the funds from a Rain market.
-
-This function **does not send the transaction** — it only prepares calldata.
-
-### Method Signature
+#### `buildClaimTx(params)` — Claim winnings
 
 ```ts
-buildClaimTx(params: ClaimTxParams): Promise<RawTransaction>
+const tx = await rain.buildClaimTx({
+  marketId: '698c8f116e985bbfacc7fc01',
+  walletAddress: '0x996ea23940f4a01610181D04bdB6F862719b63f0',
+});
 ```
 
-### Parameters
+#### `buildResolveMarketTx(params)` — Resolve a market (admin)
+
+Combines close + choose winner into a multi-step transaction array.
 
 ```ts
-interface ClaimTxParams {
-  marketId: string;
-  walletAddress: `0x${string}`;
+const txs = await rain.buildResolveMarketTx({
+  marketId: '698c8f116e985bbfacc7fc01',
+  winningOption: 1,  // 1-indexed
+});
+
+for (const tx of txs) {
+  await provider.sendTransaction(tx);
 }
 ```
 
-### Validations
+Individual steps are also available: `buildCloseMarketTx(params)` and `buildChooseWinnerTx(params)`.
 
-| Parameter       | Type          | Required | Description                        |
-| --------------- | ------------- | -------- | ---------------------------------- |
-| `marketId`      | `string`      | ✅        | Unique identifier of the market    |
-| `walletAddress` | `0x${string}` | ✅        | Address of the user claiming funds |
-
-### Return Type
+#### `buildDepositToSmartAccountTx(params)` / `buildWithdrawFromSmartAccountTx(params)`
 
 ```ts
-interface RawTransaction {
-  to: `0x${string}`;
-  data: `0x${string}`;
-}
-```
+// Deposit: EOA → Smart Account
+const depositTx = rain.buildDepositToSmartAccountTx({
+  tokenAddress: '0x...USDT',
+  smartAccountAddress: '0x...smartAccount',
+  amount: 50_000_000n,
+});
 
-### Example
-
-```ts
-rain.buildClaimTx({
-  marketId: "698c8f116e985bbfacc7fc01",
-  walletAddress: '0x996ea23940f4a01610181D04bdB6F862719b63f0'
-})
+// Withdraw: Smart Account → EOA
+const withdrawTx = rain.buildWithdrawFromSmartAccountTx({
+  tokenAddress: '0x...USDT',
+  eoaAddress: '0x...eoa',
+  amount: 50_000_000n,
+});
 ```
 
 ---
 
-## subscribeToMarketEvents
+### Positions & Portfolio
 
-Subscribes to live on-chain events for a specific market via WebSocket. Returns an `Unsubscribe` function to stop listening.
-
-Requires `wsRpcUrl` in the `Rain` constructor config.
-
-### Method Signature
+#### `getPositions(address)` — All positions across markets
 
 ```ts
-subscribeToMarketEvents(params: SubscribeMarketEventsParams): Unsubscribe;
+const positions = await rain.getPositions('0x...');
+// Returns: PositionsResult
+// { address, markets: [{ marketId, title, status, contractAddress,
+//     options: [{ choiceIndex, optionName, shares, sharesInEscrow, amountInEscrow, currentPrice }],
+//     userLiquidity, claimed, dynamicPayout }] }
 ```
 
-### Parameters
+#### `getPositionByMarket(address, marketId)` — Single market position
 
 ```ts
-interface SubscribeMarketEventsParams {
-  marketAddress: `0x${string}`;
-  eventNames?: MarketEventName[];       // Optional filter — omit for all events
-  onEvent: (event: MarketTradeEvent) => void;
-  onError?: (error: Error) => void;
-}
+const pos = await rain.getPositionByMarket('0x...', '698c8f116e985bbfacc7fc01');
+// Returns: PositionByMarket (same shape as a single MarketPosition)
 ```
 
-### Event Types
+#### `getLPPosition(address, marketId)` — LP position details
 
-Each market is a diamond proxy with a Uniswap v2-style AMM per option. Events fall into three categories:
+```ts
+const lp = await rain.getLPPosition('0x...', '698c8f116e985bbfacc7fc01');
+// Returns: LPPosition
+// { marketId, title, status, contractAddress,
+//   userLiquidity, totalLiquidity, poolShareBps, liquidityShareBps }
+```
 
-#### Trade events
-| Event | Description |
-|---|---|
-| `EnterOption` | AMM buy — user swaps base tokens for option shares at the current AMM price. |
-| `PlaceBuyOrder` | Limit buy placed — order sits in the order book until the price is reached. |
-| `PlaceSellOrder` | Limit sell placed — user lists option shares for sale at a target price. |
-| `ExecuteBuyOrder` | Limit buy filled — a previously placed buy order was matched and executed. |
-| `ExecuteSellOrder` | Limit sell filled — a previously placed sell order was matched and executed. |
-| `CancelBuyOrder` | User cancelled an open limit buy order. |
-| `CancelSellOrder` | User cancelled an open limit sell order. |
+#### `getPortfolioValue(params)` — Aggregate portfolio
 
-#### Price sync events
-| Event | Description |
-|---|---|
-| `Sync` | AMM reserve rebalance after any trade. Emitted **once per option pair** in the market. A market with 3 options emits 3 `Sync` events per trade, each containing the updated `optionVotes` (reserves for that option) and `allVotes` (total reserves across all options). The ratio `optionVotes / allVotes` gives the implied probability (price) of that option. |
+```ts
+const portfolio = await rain.getPortfolioValue({
+  address: '0x...',
+  tokenAddresses: ['0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'],  // USDT
+});
+// Returns: PortfolioValue
+// { address, tokenBalances, positions: [{ marketId, title, dynamicPayout, totalPositionValue }],
+//   totalPositionValue }
+```
 
-#### Lifecycle events
-| Event | Description |
-|---|---|
-| `Claim` | User claimed their winnings from a resolved market. |
-| `ChooseWinner` | Market resolved — the winning option was selected. |
-| `ClosePool` | Market closed — no further trading allowed. |
+`dynamicPayout` is per-option: `[0, 804164316, 0, 0]` means ~804 USDT payout if option 1 wins.
 
-### Example
+---
+
+### Account Management
+
+#### `getSmartAccountBalance(params)` — Token balances
+
+```ts
+const balance = await rain.getSmartAccountBalance({
+  address: '0x...',
+  tokenAddresses: ['0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'],
+});
+// Returns: AccountBalanceResult { address, balances: [{ token, balance, decimals }] }
+```
+
+#### `getEOAFromSmartAccount(smartAccountAddress)` — Reverse lookup
+
+```ts
+const eoa = await rain.getEOAFromSmartAccount('0x...smartAccount');
+// Returns: '0x...eoa'
+```
+
+---
+
+### Transaction History
+
+Requires `subgraphUrl` in the constructor config (or per-method override).
+
+#### `getTransactions(params)` — Wallet transaction history
+
+```ts
+const txs = await rain.getTransactions({
+  address: '0x...',
+  first: 20,
+  skip: 0,
+  orderBy: 'timestamp',
+  orderDirection: 'desc',
+});
+```
+
+#### `getTransactionDetails(params)` — Decode a single transaction
+
+```ts
+const details = await rain.getTransactionDetails({ txHash: '0x...' });
+```
+
+#### `getMarketTransactions(params)` — All trades on a market
+
+```ts
+const trades = await rain.getMarketTransactions({
+  marketAddress: '0x...',
+  first: 50,
+});
+```
+
+#### `getTradeHistory(params)` — User trades on a specific market
+
+```ts
+const history = await rain.getTradeHistory({
+  address: '0x...',
+  marketAddress: '0x...',
+});
+```
+
+---
+
+### Analytics
+
+#### `getPriceHistory(params)` — OHLC candle data
+
+```ts
+const candles = await rain.getPriceHistory({
+  marketAddress: '0x...',
+  interval: '1h',       // '5m' | '15m' | '1h' | '4h' | '1d'
+  option: 0,
+});
+// Returns: PriceHistoryResult { candles: [{ open, high, low, close, timestamp }] }
+```
+
+#### `getPnL(params)` — Realized & unrealized P&L
+
+```ts
+const pnl = await rain.getPnL({
+  address: '0x...',
+  marketId: '...',  // Optional — omit for aggregate
+});
+```
+
+#### `getLeaderboard(params)` — Top traders
+
+```ts
+const leaders = await rain.getLeaderboard({
+  timeframe: '7d',       // '24h' | '7d' | '30d' | 'all'
+  sortBy: 'pnl',        // 'pnl' | 'volume' | 'winRate'
+  first: 10,
+});
+```
+
+---
+
+### WebSocket Subscriptions
+
+Requires `wsRpcUrl` in the constructor config.
+
+#### `subscribeToMarketEvents(params)` — Live on-chain events
 
 ```ts
 const rain = new Rain({
@@ -409,23 +464,156 @@ const rain = new Rain({
 });
 
 const unsubscribe = rain.subscribeToMarketEvents({
-  marketAddress: '0xd262abd3d58038e15736Ec32c4F7b020C2B21dB5',
-  eventNames: ['EnterOption', 'Sync'],  // optional filter
+  marketAddress: '0x...',
+  eventNames: ['EnterOption', 'Sync'],  // Optional filter — omit for all events
   onEvent: (event) => {
     console.log(event.eventName, event.args);
-    // EnterOption { wallet, option, baseAmount, optionAmount }
-    // Sync       { pair, optionVotes, allVotes }
   },
   onError: (err) => console.error(err),
 });
 
-// Later: stop listening
+// Stop listening
 unsubscribe();
 ```
 
-### Callback Payload
+**Available events:**
+
+| Category   | Events                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| Trades     | `EnterOption`, `PlaceBuyOrder`, `PlaceSellOrder`, `ExecuteBuyOrder`, `ExecuteSellOrder`, `CancelBuyOrder`, `CancelSellOrder` |
+| Price sync | `Sync` — AMM reserve rebalance (emitted once per option pair per trade)                       |
+| Lifecycle  | `Claim`, `ChooseWinner`, `ClosePool`                                                          |
+
+#### `subscribePriceUpdates(params)` — Real-time price feed
 
 ```ts
+const unsubscribe = rain.subscribePriceUpdates({
+  marketAddress: '0x...',
+  onPriceUpdate: (update) => {
+    // update.prices: OptionPrice[] — fresh prices after each trade
+    // update.triggeredBy: MarketTradeEvent — the event that caused the update
+    console.log(update.prices);
+  },
+  onError: (err) => console.error(err),
+});
+```
+
+#### `destroyWebSocket()` — Cleanup
+
+```ts
+await rain.destroyWebSocket();
+```
+
+---
+
+## RainAA — Account Abstraction
+
+`RainAA` manages Alchemy smart accounts with gas sponsorship.
+
+```ts
+import { RainAA } from '@rainprotocolsdk/sdk';
+import { arbitrum } from 'viem/chains';
+
+const rainAA = new RainAA({
+  walletClient: yourWalletClient,       // viem WalletClient
+  alchemyApiKey: 'your-alchemy-key',
+  paymasterPolicyId: 'your-policy-id',
+  chain: arbitrum,
+  rpcUrl: 'https://...',               // Optional
+});
+
+// Connect — derives smart account from EOA
+const smartAccountAddress = await rainAA.connect();
+console.log('Smart account:', smartAccountAddress);
+
+// Send transactions built by Rain
+const rain = new Rain({ environment: 'production' });
+const rawTx = rain.buildBuyOptionRawTx({ ... });
+const txHash = await rainAA.sendTransaction(rawTx);
+
+// Accessors
+rainAA.address;   // Smart account address (throws if not connected)
+rainAA.client;    // Underlying AA client (throws if not connected)
+
+// Disconnect
+rainAA.disconnect();
+```
+
+### Flow: Rain + RainAA Together
+
+```ts
+// 1. Rain builds the transaction (WHAT)
+const rawTx = rain.buildBuyOptionRawTx({
+  marketContractAddress: '0x...',
+  selectedOption: 1n,
+  buyAmountInWei: 10_000_000n,
+});
+
+// 2. RainAA sends it via smart account (HOW)
+const txHash = await rainAA.sendTransaction(rawTx);
+```
+
+---
+
+## Data Sources
+
+The SDK reads from three sources depending on the method:
+
+| Source       | Used by                                                        | Config                       |
+| ------------ | -------------------------------------------------------------- | ---------------------------- |
+| **Rain API** | `getPublicMarkets`, `getMarketDetails` (partial), `buildClaimTx`, `buildCreateMarketTx` | `environment` (auto)         |
+| **On-chain** | `getMarketPrices`, `getMarketVolume`, `getPositions`, all tx builders | `rpcUrl` (auto-selected)     |
+| **Subgraph** | `getTransactions`, `getPriceHistory`, `getPnL`, `getLeaderboard` | `subgraphUrl` + `subgraphApiKey` |
+
+Methods that require the subgraph will throw if `subgraphUrl` is not configured.
+
+---
+
+## Key Types
+
+```ts
+// Core transaction type — returned by all builders
+interface RawTransaction {
+  to: `0x${string}`;
+  data: `0x${string}`;
+  value?: bigint;
+}
+
+// Market from listing endpoint
+interface Market {
+  id: string;
+  title: string;
+  totalVolume: string;
+  status: MarketStatus;
+  contractAddress?: string;
+}
+
+// Full market details (API + on-chain)
+interface MarketDetails {
+  id: string;
+  title: string;
+  status: MarketStatus;
+  contractAddress: `0x${string}`;
+  options: MarketOption[];
+  poolState: number;
+  numberOfOptions: bigint;
+  startTime: bigint;
+  endTime: bigint;
+  totalLiquidity: bigint;
+  // ... and more
+}
+
+// Position data per market
+interface MarketPosition {
+  marketId: string;
+  title: string;
+  options: OptionPosition[];
+  userLiquidity: bigint;
+  claimed: boolean;
+  dynamicPayout: bigint[];
+}
+
+// WebSocket event payload
 interface MarketTradeEvent {
   eventName: MarketEventName;
   marketAddress: `0x${string}`;
@@ -434,130 +622,82 @@ interface MarketTradeEvent {
   logIndex: number;
   args: Record<string, unknown>;
 }
+
+type MarketStatus = 'Live' | 'New' | 'WaitingForResult' | 'UnderDispute' |
+  'UnderAppeal' | 'ClosingSoon' | 'InReview' | 'InEvaluation' | 'Closed' | 'Trading';
 ```
 
 ---
 
-## getPortfolioValue
+## Full Method Reference
 
-Returns a user's combined portfolio: token balances + current value of all open positions across all markets. Internally calls `getPositions()` and `getSmartAccountBalance()` in parallel, then aggregates the results.
+### Rain Class
 
-### Method Signature
+| Category             | Method                              | Returns                  | Async |
+| -------------------- | ----------------------------------- | ------------------------ | ----- |
+| **Markets**          | `getPublicMarkets(params)`          | `Market[]`               | Yes   |
+|                      | `getMarketDetails(marketId)`        | `MarketDetails`          | Yes   |
+|                      | `getMarketPrices(marketId)`         | `OptionPrice[]`          | Yes   |
+|                      | `getMarketVolume(marketId)`         | `MarketVolume`           | Yes   |
+|                      | `getMarketLiquidity(marketId)`      | `MarketLiquidity`        | Yes   |
+|                      | `getMarketAddress(marketId)`        | `0x${string}`            | Yes   |
+|                      | `getMarketId(marketAddress)`        | `string`                 | Yes   |
+|                      | `getProtocolStats()`                | `ProtocolStats`          | Yes   |
+| **Tx Builders**      | `buildApprovalTx(params)`           | `RawTransaction`         | No    |
+|                      | `buildCreateMarketTx(params)`       | `RawTransaction[]`       | Yes   |
+|                      | `buildBuyOptionRawTx(params)`       | `RawTransaction`         | No    |
+|                      | `buildLimitBuyOptionTx(params)`     | `RawTransaction`         | No    |
+|                      | `buildSellOptionTx(params)`         | `RawTransaction`         | No    |
+|                      | `buildCancelBuyOrdersTx(params)`    | `RawTransaction`         | No    |
+|                      | `buildCancelSellOrdersTx(params)`   | `RawTransaction`         | No    |
+|                      | `buildAddLiquidityTx(params)`       | `RawTransaction`         | No    |
+|                      | `buildClaimTx(params)`              | `RawTransaction`         | Yes   |
+|                      | `buildCloseMarketTx(params)`        | `RawTransaction`         | Yes   |
+|                      | `buildChooseWinnerTx(params)`       | `RawTransaction`         | Yes   |
+|                      | `buildResolveMarketTx(params)`      | `RawTransaction[]`       | Yes   |
+|                      | `buildDepositToSmartAccountTx(p)`   | `RawTransaction`         | No    |
+|                      | `buildWithdrawFromSmartAccountTx(p)`| `RawTransaction`         | No    |
+| **Positions**        | `getPositions(address)`             | `PositionsResult`        | Yes   |
+|                      | `getPositionByMarket(addr, id)`     | `PositionByMarket`       | Yes   |
+|                      | `getLPPosition(addr, id)`           | `LPPosition`             | Yes   |
+|                      | `getPortfolioValue(params)`         | `PortfolioValue`         | Yes   |
+| **Accounts**         | `getSmartAccountBalance(params)`    | `AccountBalanceResult`   | Yes   |
+|                      | `getEOAFromSmartAccount(addr)`      | `0x${string}`            | Yes   |
+| **Tx History**       | `getTransactions(params)`           | `TransactionsResult`     | Yes   |
+|                      | `getTransactionDetails(params)`     | `TransactionDetails`     | Yes   |
+|                      | `getMarketTransactions(params)`     | `MarketTransactionsResult` | Yes |
+|                      | `getTradeHistory(params)`           | `TradeHistoryResult`     | Yes   |
+| **Analytics**        | `getPriceHistory(params)`           | `PriceHistoryResult`     | Yes   |
+|                      | `getPnL(params)`                    | `PnLResult`              | Yes   |
+|                      | `getLeaderboard(params)`            | `LeaderboardResult`      | Yes   |
+| **WebSocket**        | `subscribeToMarketEvents(params)`   | `Unsubscribe`            | No    |
+|                      | `subscribePriceUpdates(params)`     | `Unsubscribe`            | No    |
+|                      | `destroyWebSocket()`                | `void`                   | Yes   |
 
-```ts
-getPortfolioValue(params: {
-  address: `0x${string}`;
-  tokenAddresses: `0x${string}`[];
-}): Promise<PortfolioValue>;
-```
+### RainAA Class
 
-### Parameters
-
-| Parameter        | Type              | Required | Description                                                     |
-| ---------------- | ----------------- | -------- | --------------------------------------------------------------- |
-| `address`        | `0x${string}`     | ✅        | Wallet address to query (EOA or smart account)                  |
-| `tokenAddresses` | `0x${string}`[]   | ✅        | ERC20 token addresses to check balances for (e.g. USDT on Arb) |
-
-### Return Type
-
-```ts
-interface PortfolioValue {
-  address: `0x${string}`;
-  tokenBalances: TokenBalance[];        // per-token balance from getSmartAccountBalance
-  positions: MarketPositionValue[];     // per-market position values
-  totalPositionValue: bigint;           // sum across all markets (base token units)
-}
-
-interface MarketPositionValue {
-  marketId: string;
-  title: string;
-  status: string;
-  contractAddress: `0x${string}`;
-  dynamicPayout: bigint[];       // per-option payout in base token units
-  totalPositionValue: bigint;    // sum of dynamicPayout entries for this market
-}
-```
-
-### Understanding `dynamicPayout`
-
-`dynamicPayout` is an array with one entry per market option, returned by the on-chain `getDynamicPayout(address)` call. Each entry represents how much the user would receive (in base token units) **if that option wins**.
-
-For example, `[0, 804164316, 0, 0]` on a USDT market (6 decimals) means:
-- Option 0: 0 USDT payout
-- Option 1: ~804.16 USDT payout if it wins
-- Option 2: 0 USDT payout
-- Option 3: 0 USDT payout
-
-`totalPositionValue` is the sum of all `dynamicPayout` entries. When a user holds shares in only one option, this equals the potential payout. When holding shares in multiple options, the sum overstates the actual value since only one option can win — the caller should interpret accordingly.
-
-### Token balance note
-
-Token balances are reported individually because different tokens (USDT, ETH, etc.) have different decimals and no on-chain price oracle is used. The SDK does not attempt to sum balances across tokens — the caller is responsible for cross-token aggregation if needed.
-
-### Example
-
-```ts
-const rain = new Rain({ environment: 'development' });
-
-const portfolio = await rain.getPortfolioValue({
-  address: '0x996ea23940f4a01610181D04bdB6F862719b63f0',
-  tokenAddresses: ['0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'], // USDT on Arbitrum
-});
-
-console.log('Total position value:', portfolio.totalPositionValue);
-console.log('Token balances:', portfolio.tokenBalances);
-console.log('Markets with positions:', portfolio.positions.length);
-
-for (const pos of portfolio.positions) {
-  console.log(`${pos.title} — value: ${pos.totalPositionValue}`);
-  console.log(`  Payout per option: [${pos.dynamicPayout.join(', ')}]`);
-}
-```
+| Method               | Returns              | Async |
+| -------------------- | -------------------- | ----- |
+| `connect()`          | `0x${string}`        | Yes   |
+| `sendTransaction(tx)`| `0x${string}` (hash) | Yes   |
+| `disconnect()`       | `void`               | No    |
+| `.address`           | `0x${string}`        | —     |
+| `.client`            | Smart wallet client  | —     |
 
 ---
 
-## RainAA Class (Account Abstraction)
+## Development
 
-`RainAA` is responsible for:
+```bash
+# Build
+cd rain-sdk && npm run build
 
-* Smart account creation
-* Session management (coming soon)
-* Gas-sponsored execution (coming soon)
-* Transaction submission (coming soon)
+# Watch mode
+npm run dev
 
-> `RainAA` consumes raw transactions generated by `Rain`.
+# Run tests
+npm test
 
-### Conceptual Flow
-
-```ts
-Rain (WHAT to do)
-   ↓
-Raw Transaction
-   ↓
-RainAA (HOW to execute)
+# Integration tests
+npm run test:integration
 ```
-
-## Versioning Policy
-
-Rain SDK follows **Semantic Versioning**:
-
-* **Patch** (`1.0.x`) → Bug fixes
-* **Minor** (`1.x.0`) → New features, backward compatible
-* **Major** (`x.0.0`) → Breaking API changes
-
----
-
-## Recommended Usage Pattern
-
-```ts
-// 1. Read data / build tx
-const rain = new Rain();
-const rawTx = rain.buildBuyOptionRawTx(...);
-
-// 2. Execute via your provider
-await yourprovider.sendTransaction(rawTx);
-```
-
----
-
-**Rain SDK** is built to scale with both products and protocols.
