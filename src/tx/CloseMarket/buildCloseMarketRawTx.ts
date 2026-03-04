@@ -45,22 +45,34 @@ export async function buildCloseMarketRawTx(
             throw new Error("proposedOutcome is required for V2 markets");
         }
 
-        txs.push({
-            to: contractAddress,
-            data: encodeFunctionData({
-                abi: TradePoolAbi,
-                functionName: CLOSE_POOL,
-            }),
-        });
+        if (isAiResolver) {
+            // AI resolver: closePool() with no args
+            txs.push({
+                to: contractAddress,
+                data: encodeFunctionData({
+                    abi: TradePoolAbi,
+                    functionName: CLOSE_POOL,
+                }),
+            });
+        }
+        else {
+            txs.push({
+                to: contractAddress,
+                data: encodeFunctionData({
+                    abi: TradePoolAbi,
+                    functionName: CLOSE_POOL,
+                }),
+            });
 
-        txs.push({
-            to: contractAddress,
-            data: encodeFunctionData({
-                abi: TradePoolAbi,
-                functionName: CHOOSE_WINNER,
-                args: [BigInt(proposedOutcome)],
-            }),
-        });
+            txs.push({
+                to: contractAddress,
+                data: encodeFunctionData({
+                    abi: TradePoolAbi,
+                    functionName: CHOOSE_WINNER,
+                    args: [BigInt(proposedOutcome)],
+                }),
+            });
+        }
     } else {
         // V3 flow: optional approvals → closePool() or closePool(proposedOutcome)
         const isUsdtMarket = usdtSymbol ? marketTokenSymbol === usdtSymbol : false;
