@@ -37,7 +37,7 @@ All transaction builders return a `RawTransaction` — the caller decides how to
 ## Installation
 
 ```bash
-npm install @rainprotocolsdk/sdk
+npm install @buidlrrr/rain-sdk
 ```
 
 **Peer dependency**: `viem ^2.0.0`
@@ -45,7 +45,7 @@ npm install @rainprotocolsdk/sdk
 ## Quick Start
 
 ```ts
-import { Rain, RainAA } from '@rainprotocolsdk/sdk';
+import { Rain, RainAA } from '@buidlrrr/rain-sdk';
 
 // 1. Initialize (stateless — no wallet needed)
 const rain = new Rain({ environment: 'development' });
@@ -511,7 +511,7 @@ await rain.destroyWebSocket();
 `RainAA` manages Alchemy smart accounts with gas sponsorship.
 
 ```ts
-import { RainAA } from '@rainprotocolsdk/sdk';
+import { RainAA } from '@buidlrrr/rain-sdk';
 import { arbitrum } from 'viem/chains';
 
 const rainAA = new RainAA({
