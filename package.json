@@ -36,21 +36,30 @@
     "author": "Rain Protocol",
     "license": "MIT",
     "peerDependencies": {
-        "viem": "^2.0.0",
         "@account-kit/infra": "^4.48.0",
         "@account-kit/wallet-client": "^0.1.0-alpha.10",
         "@alchemy/aa-alchemy": "^3.0.0",
-        "@alchemy/aa-core": "^3.0.0"
+        "@alchemy/aa-core": "^3.0.0",
+        "viem": "^2.0.0"
     },
     "peerDependenciesMeta": {
-        "@account-kit/infra": { "optional": true },
-        "@account-kit/wallet-client": { "optional": true },
-        "@alchemy/aa-alchemy": { "optional": true },
-        "@alchemy/aa-core": { "optional": true }
+        "@account-kit/infra": {
+            "optional": true
+        },
+        "@account-kit/wallet-client": {
+            "optional": true
+        },
+        "@alchemy/aa-alchemy": {
+            "optional": true
+        },
+        "@alchemy/aa-core": {
+            "optional": true
+        }
     },
     "dependencies": {
         "ethers": "^6.16.0",
-        "socket.io-client": "^4.8.3"
+        "socket.io-client": "^4.8.3",
+        "zod": "^3.25.76"
     },
     "devDependencies": {
         "tsx": "^4.21.0",
