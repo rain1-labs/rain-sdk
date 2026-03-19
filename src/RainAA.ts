@@ -1,8 +1,4 @@
 import { custom, createWalletClient } from 'viem';
-import { WalletClientSigner } from '@alchemy/aa-core';
-import { alchemy } from "@account-kit/infra";
-import { createSmartWalletClient } from "@account-kit/wallet-client";
-
 import { RainConfig } from './types.js';
 import { RawTransaction } from './tx/types.js';
 
@@ -20,7 +16,9 @@ export class RainAA {
     }
 
     /**
-     * Initializes the Smart Account
+     * Initializes the Smart Account.
+     * Requires @alchemy/aa-core, @account-kit/infra, and @account-kit/wallet-client
+     * to be installed as peer dependencies.
      */
     async connect(): Promise<`0x${string}`> {
         if (this._address && this._client) {
@@ -28,6 +26,11 @@ export class RainAA {
         }
 
         try {
+            // Dynamic imports so AA peer deps are only loaded when RainAA is actually used
+            const { WalletClientSigner } = await import('@alchemy/aa-core' as any);
+            const { alchemy } = await import('@account-kit/infra' as any);
+            const { createSmartWalletClient } = await import('@account-kit/wallet-client' as any);
+
             const signer = new WalletClientSigner(
                 createWalletClient({
                     transport: custom(this.config.walletClient),
@@ -60,7 +63,6 @@ export class RainAA {
             throw err;
         }
     }
-
 
     /**
      * Returns smart account address

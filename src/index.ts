@@ -1,4 +1,5 @@
 export { Rain } from './Rain.js';
+// RainAA is available via '@buidlrrr/rain-sdk/aa' to avoid loading AA peer deps unless needed
 export { RainAA } from './RainAA.js'
 export { RainSocket } from './socket/RainSocket.js';
 export * from './types.js';

@@ -1,6 +1,6 @@
 {
     "name": "@buidlrrr/rain-sdk",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "type": "module",
     "description": "Rain SDK",
     "main": "dist/index.js",
@@ -9,6 +9,10 @@
         ".": {
             "import": "./dist/index.js",
             "types": "./dist/index.d.ts"
+        },
+        "./aa": {
+            "import": "./dist/RainAA.js",
+            "types": "./dist/RainAA.d.ts"
         }
     },
     "files": [
@@ -37,6 +41,7 @@
     "license": "MIT",
     "peerDependencies": {
         "@account-kit/infra": "^4.48.0",
+        "@account-kit/smart-contracts": "^4.48.0",
         "@account-kit/wallet-client": "^0.1.0-alpha.10",
         "@alchemy/aa-alchemy": "^3.0.0",
         "@alchemy/aa-core": "^3.0.0",
@@ -44,6 +49,9 @@
     },
     "peerDependenciesMeta": {
         "@account-kit/infra": {
+            "optional": true
+        },
+        "@account-kit/smart-contracts": {
             "optional": true
         },
         "@account-kit/wallet-client": {
