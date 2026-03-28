@@ -4,7 +4,7 @@ import type { MulticallResult } from '../../src/utils/multicall.js';
 export const ADDR_ALICE = '0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa' as const;
 export const ADDR_BOB = '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB' as const;
 export const ADDR_TOKEN = '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9' as const; // USDT on Arb
-export const ADDR_FACTORY = '0x148DA7F2039B2B00633AC2ab566f59C8a4C86313' as const;
+export const ADDR_FACTORY = '0x05b1fd504583B81bd14c368d59E8c3e354b6C1dc' as const;
 export const ADDR_MARKET = '0x1111111111111111111111111111111111111111' as const;
 export const ADDR_MARKET_CONTRACT = '0x2222222222222222222222222222222222222222' as const;
 export const ADDR_ZERO = '0x0000000000000000000000000000000000000000' as const;

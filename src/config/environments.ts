@@ -17,7 +17,7 @@ export const ENV_CONFIG = {
     development: {
         apiUrl: "https://dev-api.rain.one",
         subgraphUrl: "https://gateway.thegraph.com/api/subgraphs/id/6r5tgnziCSykNHkD3yrEz1wohCz2NWqADtSH7azLmTh1",
-        market_factory_address: "0x148DA7F2039B2B00633AC2ab566f59C8a4C86313",
+        market_factory_address: "0x05b1fd504583B81bd14c368d59E8c3e354b6C1dc",
         dispute_initial_timer: 1 * 60,
         usdt_symbol: USDT_SYMBOL_DEV,
         usdt_token: "0xCa4f77A38d8552Dd1D5E44e890173921B67725F4" as `0x${string}`,
@@ -27,7 +27,7 @@ export const ENV_CONFIG = {
     stage: {
         apiUrl: "https://stg-api.rain.one",
         subgraphUrl: "https://gateway.thegraph.com/api/subgraphs/id/4eW9fojV2FcAm8xvhW4SGHoy17VEPmKMqz3K3b6PEhHR",
-        market_factory_address: "0x6109c9f28FE3Ad84c51368f7Ef2d487ca020c561",
+        market_factory_address: "0xD4900CA167228365806FBA4cB21f7EAe8b6d96BE",
         dispute_initial_timer: 1 * 60,
         usdt_symbol: USDT_SYMBOL_PROD,
         usdt_token: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9" as `0x${string}`,
@@ -37,7 +37,7 @@ export const ENV_CONFIG = {
     production: {
         apiUrl: "https://prod-api.rain.one",
         subgraphUrl: "https://gateway.thegraph.com/api/subgraphs/id/poBixDnF3hyafnLs9i1qkCpFppAAgmmWYgtsXrfYAWQ",
-        market_factory_address: "0xccCB3C03D9355B01883779EF15C1Be09cf3623F1",
+        market_factory_address: "0xA8640B62D755e42C9ed6A86d0fc65CE09e31F264",
         dispute_initial_timer: 120 * 60,
         usdt_symbol: USDT_SYMBOL_PROD,
         usdt_token: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9" as `0x${string}`,

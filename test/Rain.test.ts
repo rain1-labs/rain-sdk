@@ -56,7 +56,7 @@ describe('Rain.buildApprovalTx', () => {
     const rain = new Rain();
     const tx = rain.buildApprovalTx({
       tokenAddress: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-      spender: '0x148DA7F2039B2B00633AC2ab566f59C8a4C86313',
+      spender: '0x05b1fd504583B81bd14c368d59E8c3e354b6C1dc',
     });
     expect(tx).toHaveProperty('to');
     expect(tx).toHaveProperty('data');

@@ -81,9 +81,9 @@ interface RainCoreConfig {
 
 | Environment   | API URL                  | Factory Address                              | Dispute Timer |
 |---------------|--------------------------|----------------------------------------------|---------------|
-| `development` | `https://dev-api.rain.one`  | `0x148DA7F2039B2B00633AC2ab566f59C8a4C86313` | 60s           |
-| `stage`       | `https://stg-api.rain.one`  | `0x6109c9f28FE3Ad84c51368f7Ef2d487ca020c561` | 60s           |
-| `production`  | `https://prod-api.rain.one` | `0xccCB3C03D9355B01883779EF15C1Be09cf3623F1` | 7200s (2h)    |
+| `development` | `https://dev-api.rain.one`  | `0x05b1fd504583B81bd14c368d59E8c3e354b6C1dc` | 60s           |
+| `stage`       | `https://stg-api.rain.one`  | `0xD4900CA167228365806FBA4cB21f7EAe8b6d96BE` | 60s           |
+| `production`  | `https://prod-api.rain.one` | `0xA8640B62D755e42C9ed6A86d0fc65CE09e31F264` | 7200s (2h)    |
 
 ### Default RPCs (randomly selected)
 
