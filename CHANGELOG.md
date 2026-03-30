@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.2
+
+### Fixes
+
+- **Lazy-load account-kit deps** — `@account-kit/infra`, `@account-kit/wallet-client`, and `@alchemy/aa-core` are now dynamically imported inside `RainAA.connect()` instead of at the top level. Server-side consumers who only need the stateless `Rain` class can now import the SDK without installing browser-only account-kit dependencies.
+
+---
+
+## 1.1.1
+
+### Fixes
+
+- Updated deployer addresses to new contracts
+
+---
+
 ## 1.1.0
 
 ### New Features
