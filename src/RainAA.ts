@@ -1,7 +1,4 @@
 import { custom, createWalletClient } from 'viem';
-import { WalletClientSigner } from '@alchemy/aa-core';
-import { alchemy } from "@account-kit/infra";
-import { createSmartWalletClient } from "@account-kit/wallet-client";
 
 import { RainConfig } from './types.js';
 import { RawTransaction } from './tx/types.js';
@@ -28,6 +25,12 @@ export class RainAA {
         }
 
         try {
+            const [{ WalletClientSigner }, { alchemy }, { createSmartWalletClient }] = await Promise.all([
+                import('@alchemy/aa-core'),
+                import('@account-kit/infra'),
+                import('@account-kit/wallet-client'),
+            ]);
+
             const signer = new WalletClientSigner(
                 createWalletClient({
                     transport: custom(this.config.walletClient),
