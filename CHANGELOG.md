@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.0
+
+### Breaking
+
+- **`Rain.buildApprovalTx` requires an explicit `amount`** — The previous default of `ethers.MaxUint256` has been removed. Infinite approvals defeat spending-cap enforcement in ERC-4337 session-key policies (e.g. Alchemy Modular Account v2's `erc20-token-transfer` permission), forcing integrators onto weaker `functions-on-contract` permissions with no spend tracking. Callers must now pass the exact required amount per call. `ApproveTxParams.amount` is now a required `bigint`; values `<= 0n` are rejected. Internal callers in `buildCreateMarketTx` and `buildDisputeTx`/`buildAppealTx` now pass the exact required amount automatically.
+
+---
+
 ## 1.1.2
 
 ### Fixes

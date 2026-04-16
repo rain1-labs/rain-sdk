@@ -45,13 +45,13 @@ async function buildOpenDisputeTxs(
         if (!usdtTokenAddress) throw new Error("usdtTokenAddress is required for USDT markets");
         const usdtAllowance = await getTokenAllowance(usdtTokenAddress, walletAddress, contractAddress, rpcUrl);
         if (usdtAllowance < feeAmount) {
-            txs.push(buildApproveRawTx({ tokenAddress: usdtTokenAddress, spender: contractAddress }));
+            txs.push(buildApproveRawTx({ tokenAddress: usdtTokenAddress, spender: contractAddress, amount: feeAmount }));
         }
     } else {
         if (!rainTokenAddress) throw new Error("rainTokenAddress is required for RAIN markets");
         const rainAllowance = await getTokenAllowance(rainTokenAddress, walletAddress, contractAddress, rpcUrl);
         if (rainAllowance < feeAmount) {
-            txs.push(buildApproveRawTx({ tokenAddress: rainTokenAddress, spender: contractAddress }));
+            txs.push(buildApproveRawTx({ tokenAddress: rainTokenAddress, spender: contractAddress, amount: feeAmount }));
         }
     }
 

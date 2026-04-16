@@ -30,7 +30,7 @@ export async function buildCreateMarketRawTx(
     const allowance = await getUserAllownace(params);
     const createMarketTransactions: RawTransaction[] = [];
     if (BigInt(allowance) < BigInt(inputAmountWei)) {
-        const approveTx = buildApproveRawTx({ spender: factoryContractAddress, tokenAddress: baseToken })
+        const approveTx = buildApproveRawTx({ spender: factoryContractAddress, tokenAddress: baseToken, amount: inputAmountWei })
         createMarketTransactions.push(approveTx);
     }
     const normalizeBarValue = normalizeBarValues(barValues);

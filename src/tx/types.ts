@@ -13,7 +13,7 @@ export interface RawTransaction {
 export type ApproveTxParams = {
     tokenAddress: `0x${string}`;
     spender: `0x${string}`;
-    amount?: bigint; // defaults to max uint256
+    amount: bigint;
 };
 
 export interface EnterLimitOptionTxParams {
