@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0
+
+### New Features
+
+- **`getMarketById` accepts optional `cache` param** — Callers can now pass `cache: 'no-store'` (or any `RequestCache` value) to bypass the browser's HTTP cache when fetching a market. Useful when the API's `Cache-Control` headers cause stale reads (e.g. status still `Live` after market closes). Default behavior unchanged.
+
+---
+
 ## 2.0.0
 
 ### Breaking
