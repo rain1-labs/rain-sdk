@@ -135,6 +135,7 @@ export interface GetProtocolStatsParams {
 export interface GetMarketByIdParams {
     marketId: string;
     apiUrl?: string;
+    cache?: RequestCache;
 }
 
 export interface GetUserInvestmentsParams {

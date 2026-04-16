@@ -4,7 +4,10 @@ export async function getMarketById(params: GetMarketByIdParams): Promise<Market
     if (!params?.apiUrl) throw new Error("Environment is not set properly, api url is missing");
     if (!params?.marketId) throw new Error("marketId is required");
 
-    const res = await fetch(`${params.apiUrl}/pools/pool/${params.marketId}`);
+    const res = await fetch(
+        `${params.apiUrl}/pools/pool/${params.marketId}`,
+        params.cache ? { cache: params.cache } : undefined,
+    );
     if (!res.ok) {
         throw new Error(`Failed to fetch market: ${res.status}`);
     }
